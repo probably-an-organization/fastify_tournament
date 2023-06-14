@@ -1,0 +1,290 @@
+{
+	"info": {
+		"_postman_id": "43bba442-84b2-4ea8-8df3-8ebaba3c6e19",
+		"name": "organizer",
+		"description": "frontend API calls (developer mode)  \n\nimportant:\n\n- set Origin header to \"http://localhost:3000\"",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "12573756"
+	},
+	"item": [
+		{
+			"name": "test",
+			"item": [
+				{
+					"name": "get",
+					"item": [
+						{
+							"name": "ping",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Origin",
+										"value": "{{origin}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{url}}/ping",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"ping"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "mail",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Origin",
+										"value": "{{origin}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{url}}/mail",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"mail"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "postgres/:username",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Origin",
+										"value": "{{origin}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{url}}/postgres/asdf",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"postgres",
+										"asdf"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "jwt",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Origin",
+										"value": "{{origin}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{url}}/jwt",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"jwt"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "verify-jwt",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFzZGYiLCJ2ZXJpZmllZCI6dHJ1ZSwicm9sZUlkIjpudWxsLCJpYXQiOjE2NzkyNDQxNjR9.25Dp_1kF5uLe8pVddt0vzPsxJqjbTJZ3g5nVEVesSSY",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [
+									{
+										"key": "Origin",
+										"value": "{{origin}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{url}}/verify-jwt",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"verify-jwt"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "post",
+					"item": [
+						{
+							"name": "post",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Origin",
+										"value": "{{origin}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"username\": \"asdf\",\r\n    \"password\": \"123\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{url}}/post",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"post"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "authentication",
+			"item": [
+				{
+					"name": "post",
+					"item": [
+						{
+							"name": "user-verification",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Origin",
+										"value": "{{origin}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"token\": \"yiwnOtJZTZ5oVYcxqIzulCHIhlNNKk\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{url}}/user-verification",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"user-verification"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "sign-up",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Origin",
+										"value": "{{origin}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"username\": \"asdf\",\r\n    \"email\": \"the_unnamed_person@gmx.net\",\r\n    \"password\": \"12345678910\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{url}}/sign-up",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"sign-up"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "login",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Origin",
+										"value": "{{origin}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"email\": \"the_unnamed_person@gmx.net\",\r\n    \"password\": \"12345678910\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{url}}/login",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"login"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		}
+	]
+}
