@@ -31,26 +31,26 @@ const headerJsonSchema = {
 } as const;
 
 const responseJsonSchema = {
-  // 200: {
-  //   type: "object",
-  //   properties: {
-  //     _id: { type: "number" },
-  //     name: { type: "string" },
-  //     participants: {
-  //       type: "array",
-  //       items: {
-  //         type: "object",
-  //         properties: {
-  //           _id: { type: "number" },
-  //           name: { type: "string" },
-  //           team: { type: "string" },
-  //         },
-  //       },
-  //       // required: ["_id", "name", "team"],
-  //     },
-  //     // required: ["_id", "name"],
-  //   },
-  // },
+  200: {
+    type: "object",
+    properties: {
+      _id: { type: "number" },
+      name: { type: "string" },
+      participants: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            _id: { type: "number" },
+            name: { type: "string" },
+            team: { type: "string" },
+          },
+        },
+        required: ["_id", "name", "team"],
+      },
+    },
+    required: ["_id", "name"],
+  },
   400: {
     type: "string",
   },
@@ -71,7 +71,7 @@ export default async function createKnockout(
       headers: headerJsonSchema,
       response: responseJsonSchema,
     },
-    onRequest: [fastify.authenticate],
+    onRequest: [fastify.authenticate], // fastify-jwt
   };
 
   fastify
@@ -82,6 +82,7 @@ export default async function createKnockout(
       // TODO check user role & permission
       if (request.user.roleId === null) {
         reply.code(400).send("No permission");
+        return;
       }
 
       fastify.pg.connect((err: Error, client: PoolClient, release: any) => {
@@ -93,7 +94,7 @@ export default async function createKnockout(
               INSERT INTO
                 knockout_tournament.tournaments (name, participants)
               VALUES
-                ($1::VARCHAR, $2::SMALLINT)
+                ($1::VARCHAR)
               RETURNING
                 tournament_id,
                 name,
@@ -122,7 +123,7 @@ export default async function createKnockout(
               t.tournament_id,
               t.name
           `,
-          [name, participants.length],
+          [name],
           (err: Error, result: QueryResult<any>) => {
             release();
             if (err) {
