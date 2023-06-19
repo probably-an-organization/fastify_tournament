@@ -4,31 +4,36 @@ dotenv.config();
 /* * * * * * * * * * * * * * * * * * * *
  * FASTIFY & DEFAULT PLUGINS
  * * * * * * * * * * * * * * * * * * * */
-
 import fastifyCore from "fastify";
 import fastifyPostgres from "@fastify/postgres";
 import fastifyJwt from "@fastify/jwt";
 import fastifyCookie from "@fastify/cookie";
 import fastifyCors from "@fastify/cors";
 import { JWT_SECRET, APP_ORIGIN } from "./src/configs/setupConfig";
-import { FASTIFY_CONFIG, FASTIFY_PG_CONNECTION_STRING } from "./src/configs/fastifyConfig";
+import {
+  FASTIFY_CONFIG,
+  FASTIFY_PG_CONNECTION_STRING,
+} from "./src/configs/fastifyConfig";
 
 /* * * * * * * * * * * * * * * * * * * *
  * FASTIFY SETUP
  * * * * * * * * * * * * * * * * * * * */
-
 const fastify = fastifyCore(FASTIFY_CONFIG);
 
-fastify.addContentTypeParser("application/json", { parseAs: "string" }, (req, body, done) => {
-  try {
-    var json: string = JSON.parse(String(body));
-    done(null, json);
-  } catch (err: unknown) {
-    if (err instanceof Error) {
-      done(err, undefined);
+fastify.addContentTypeParser(
+  "application/json",
+  { parseAs: "string" },
+  (req, body, done) => {
+    try {
+      var json: string = JSON.parse(String(body));
+      done(null, json);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        done(err, undefined);
+      }
     }
   }
-});
+);
 
 fastify.register(fastifyPostgres, {
   connectionString: FASTIFY_PG_CONNECTION_STRING,
@@ -41,7 +46,6 @@ fastify.register(fastifyJwt, {
 fastify.decorate("authenticate", async (request: any, reply: any) => {
   try {
     await request.jwtVerify();
-    console.log("AKOWDKOAWD", request.user);
   } catch (err) {
     reply.send(err);
   }
@@ -64,17 +68,13 @@ fastify.register(fastifyCors, {
  * CUSTOM ROUTING
  * https://github.com/fastify/fastify-example-twitter/tree/master/tweet
  * * * * * * * * * * * * * * * * * * * */
+import routes from "./src/routes";
 
-import testRoutes from "./src/routes/test";
-import authenticationRoutes from "./src/routes/authentication";
-
-fastify.register(testRoutes);
-fastify.register(authenticationRoutes);
+fastify.register(routes);
 
 /* * * * * * * * * * * * * * * * * * * *
  * CUSTOM INITIALIZATION
  * * * * * * * * * * * * * * * * * * * */
-
 import { verifyMail } from "./src/utils/mailUtil";
 
 async function initialize() {

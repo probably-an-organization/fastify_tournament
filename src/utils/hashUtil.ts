@@ -12,6 +12,9 @@ export async function hashString(string: string): Promise<string> {
   return hashedString;
 }
 
-export async function hashCompare(string: string, hash: string): Promise<boolean> {
+export async function hashCompare(
+  string: string,
+  hash: string
+): Promise<boolean> {
   return await bcrypt.compare(string, hash);
 }

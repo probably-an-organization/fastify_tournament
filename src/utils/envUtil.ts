@@ -4,8 +4,14 @@ export enum EnvironmentType {
   Number = "NUMBER",
 }
 export function getEnvironmentVariable(variable: string): string;
-export function getEnvironmentVariable(variable: string, type: EnvironmentType.Boolean): boolean;
-export function getEnvironmentVariable(variable: string, type: EnvironmentType.Number): number;
+export function getEnvironmentVariable(
+  variable: string,
+  type: EnvironmentType.Boolean
+): boolean;
+export function getEnvironmentVariable(
+  variable: string,
+  type: EnvironmentType.Number
+): number;
 
 export function getEnvironmentVariable(
   variable: string,
@@ -13,15 +19,17 @@ export function getEnvironmentVariable(
 ): boolean | string | number {
   const value: string | undefined = process.env[variable];
   if (!value) {
-    throw new Error(`[src/utils/envUtils.ts] Could not find environment variable ${variable}`);
+    throw new Error(
+      `[src/utils/envUtils.ts] Could not find environment variable ${variable}`
+    );
   }
 
   switch (type) {
     case EnvironmentType.String: {
-      return value as string;
+      return value;
     }
     case EnvironmentType.Number: {
-      return parseInt(value) as number;
+      return parseInt(value);
     }
     case EnvironmentType.Boolean: {
       switch (value) {
@@ -29,9 +37,9 @@ export function getEnvironmentVariable(
         case "1":
         case "on":
         case "yes":
-          return true as boolean;
+          return true;
         default:
-          return false as boolean;
+          return false;
       }
     }
   }
