@@ -55,14 +55,14 @@ export default async function login(
         client.query(
           `
             SELECT
-              a.user_id,
-              a.username,
-              a.password,
-              a.verified,
-              a.role_id
+              u.id AS _id,
+              u.username,
+              u.password,
+              u.verified
             FROM
-              authentication.users AS a
-            WHERE a.email = $1
+              authentication.users AS u
+            WHERE
+              u.email = $1::VARCHAR
           `,
           [email],
           async (err: Error, result: QueryResult<any>) => {
@@ -74,20 +74,18 @@ export default async function login(
               reply.code(400).send("User not found");
             }
             const userData: {
-              user_id: number;
+              _id: number;
               username: string;
               password: string;
               verified: boolean;
-              role_id: number;
             } = result.rows[0];
             if (await hashCompare(password, userData.password)) {
               const token: string = fastify.jwt.sign(
                 {
-                  userId: userData.user_id,
-                  roleId: userData.role_id,
+                  _id: userData._id,
                 },
                 {
-                  expiresIn: "5min",
+                  expiresIn: "15min",
                 }
               );
               reply.code(200).send({ token });
