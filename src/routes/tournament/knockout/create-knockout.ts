@@ -86,54 +86,38 @@ export default async function createKnockout(
         verifyPermission(1, request, reply, client, release, () => {
           client.query(
             `
-          WITH permission AS (
-            SELECT
-              COUNT (ra.role_id)
-            FROM
-              authentication.users AS u
-            LEFT JOIN
-              authentication.users_roles AS ur
-            ON
-              u.id = ur.user_id
-            LEFT JOIN
-              authentication.roles_actions AS ra
-            ON
-              ur.role_id = ra.role_id
-            WHERE
-              ra.action_id = 1
-          ),
-          new_tournament AS (
-            INSERT INTO
-              knockout_tournament.tournaments (name)
-            VALUES
-              ('${name}'::VARCHAR)
-            RETURNING
-              id,
-              name
-          ),
-          new_participants AS (
-            INSERT INTO
-              knockout_tournament.participants (tournament_id, name, team)
-            VALUES ${participants.map(
-              (p) =>
-                `((SELECT id FROM new_tournament), '${p.name}'::VARCHAR, '${p.team}'::VARCHAR)`
-            )}
-            RETURNING
-              id AS _id,
-              name,
-              team
-          )
-          SELECT
-              t.id AS _id,
-              t.name AS name,
-              jsonb_agg(p) AS participants
-          FROM
-            new_tournament as t,
-            new_participants as p
-          GROUP BY
-            t.id,
-            t.name
-        `,
+              WITH new_tournament AS (
+                INSERT INTO
+                  knockout_tournament.tournaments (name)
+                VALUES
+                  ('${name}'::VARCHAR)
+                RETURNING
+                  id,
+                  name
+              ),
+              new_participants AS (
+                INSERT INTO
+                  knockout_tournament.participants (tournament_id, name, team)
+                VALUES ${participants.map(
+                  (p) =>
+                    `((SELECT id FROM new_tournament), '${p.name}'::VARCHAR, '${p.team}'::VARCHAR)`
+                )}
+                RETURNING
+                  id AS _id,
+                  name,
+                  team
+              )
+              SELECT
+                  t.id AS _id,
+                  t.name AS name,
+                  jsonb_agg(p) AS participants
+              FROM
+                new_tournament as t,
+                new_participants as p
+              GROUP BY
+                t.id,
+                t.name
+            `,
             (err: Error, result: QueryResult<any>) => {
               if (err) {
                 release();
@@ -153,10 +137,10 @@ export default async function createKnockout(
                   (_, i) => `(
                   '${tournament._id}'::BIGINT,
                   'future'::knockout_tournament.match_status_types,
-                  '${tournament.participants[i]._id}'::BIGINT,
+                  '${tournament.participants[i * 2]._id}'::BIGINT,
                   ${
-                    tournament.participants[i + 1]
-                      ? `'${tournament.participants[i + 1]._id}'::BIGINT`
+                    tournament.participants[i * 2 + 1]
+                      ? `'${tournament.participants[i * 2 + 1]._id}'::BIGINT`
                       : "NULL"
                   },
                   '0'::CHAR,
