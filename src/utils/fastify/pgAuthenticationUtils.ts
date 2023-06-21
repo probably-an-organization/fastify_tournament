@@ -15,9 +15,14 @@ export const verifyPermission = async (
   client: PoolClient,
   release: any
 ): Promise<boolean> => {
-  const { _id } = request.user;
-
   try {
+    // get token (from cookies), decode
+    const { _id } = await request.jwtVerify(request.cookies.token);
+    if (!_id) {
+      reply.code(400).send("No token");
+      return false;
+    }
+
     const result = await client.query(
       `
       SELECT

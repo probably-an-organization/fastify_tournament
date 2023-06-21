@@ -35,6 +35,8 @@ export default async function knockoutTournament(
     .withTypeProvider<JsonSchemaToTsProvider>()
     .get("/knockout-tournament/:id", routeOptions, (request, reply): void => {
       const { id } = request.params;
+
+      console.log("AYY", id);
       fastify.pg.connect((err: Error, client: PoolClient, release: any) => {
         if (err) return reply.code(400).send(err);
 

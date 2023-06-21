@@ -68,23 +68,22 @@ export default async function signUp(
             ),
             new_user AS (
               INSERT INTO
-                authentication.users (username, email, password, role_id)
+                authentication.users (username, email, password)
               SELECT
                 d.username,
                 d.email,
-                d.password,
-                d.role_id
+                d.password
               FROM
                 data AS d
               ON CONFLICT DO NOTHING
               RETURNING
-                user_id,
+                id,
                 username
             )
             INSERT INTO
               authentication.verifications (user_id, token)
             SELECT
-              u.user_id,
+              u.id,
               d.token
             FROM
               data AS d

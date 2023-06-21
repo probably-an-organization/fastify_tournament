@@ -2,7 +2,7 @@ import { JsonSchemaToTsProvider } from "@fastify/type-provider-json-schema-to-ts
 import { FastifyInstance } from "fastify/types/instance";
 import type { PoolClient, QueryResult } from "pg";
 
-const bodyJsonSchema = {
+const querystringJsonSchema = {
   type: "object",
   additionalProperties: false,
   properties: {
@@ -35,19 +35,17 @@ export default async function userVerification(
 ): Promise<void> {
   const routeOptions = {
     schema: {
-      body: bodyJsonSchema,
-      // querystring: {},
-      // params: {},
-      // header: {},
+      // body: bodyJsonSchema,
+      querystring: querystringJsonSchema,
+      //params: paramsJsonSchema,
+      // headers: headersJsonSchema,
       response: responseJsonSchema,
     },
   };
 
   fastify
     .withTypeProvider<JsonSchemaToTsProvider>()
-    .post("/user-verification", routeOptions, (request, reply): void => {
-      const { token } = request.body;
-
+    .get("/user-verification", routeOptions, (request, reply): void => {
       fastify.pg.connect((err: Error, client: PoolClient, release: any) => {
         if (err) reply.code(400).send(err.message);
 
@@ -59,27 +57,27 @@ export default async function userVerification(
             ),
             validate_user AS (
               UPDATE
-                authentication.users AS a
+                authentication.users AS u
               SET
                 verified = true
               FROM
-                authentication.verifications AS b,
+                authentication.verifications AS v,
                 data AS d
               WHERE
-                b.token = d.token
+                v.token = d.token
               AND
-                b.user_id = a.user_id
+                v.user_id = u.id
               RETURNING
-                a.user_id
+                u.id
             )
             DELETE FROM
-              authentication.verifications AS b
+              authentication.verifications AS v
             USING
-              validate_user AS c
+              validate_user AS vu
             WHERE
-              c.user_id = b.user_id;
+              vu.id = v.user_id;
           `,
-          [token],
+          [request.query.token],
           (err: Error, result: QueryResult<any>) => {
             release();
             if (err) {

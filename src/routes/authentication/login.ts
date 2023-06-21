@@ -1,6 +1,7 @@
 import { FastifyInstance } from "fastify/types/instance";
 import { hashCompare } from "../../utils/hashUtils";
 import { JsonSchemaToTsProvider } from "@fastify/type-provider-json-schema-to-ts";
+import { APP_ORIGIN } from "../../configs/setupConfig";
 import type { PoolClient, QueryResult } from "pg";
 
 const bodyJsonSchema = {
@@ -15,10 +16,7 @@ const bodyJsonSchema = {
 
 const responseJsonSchema = {
   200: {
-    type: "object",
-    properties: {
-      token: { type: "string" },
-    },
+    type: "string",
   },
   400: {
     type: "string",
@@ -80,15 +78,29 @@ export default async function login(
               verified: boolean;
             } = result.rows[0];
             if (await hashCompare(password, userData.password)) {
-              const token: string = fastify.jwt.sign(
+              const token: string = await reply.jwtSign(
                 {
                   _id: userData._id,
                 },
                 {
-                  expiresIn: "15min",
+                  expiresIn: "30min",
                 }
               );
-              reply.code(200).send({ token });
+
+              reply
+                .code(200)
+                .header("Access-Control-Allow-Credentials", "true")
+                .header("Access-Control-Allow-Headers", "*")
+                .header("Access-Control-Allow-Origin", APP_ORIGIN)
+                .header("Content-Type", "application/json; charset='uft8'")
+                .setCookie("token", token, {
+                  //domain: "https://wherethemtools.at",
+                  path: "/",
+                  secure: true,
+                  httpOnly: true,
+                  sameSite: "lax",
+                })
+                .send("Success");
             } else {
               reply.code(400).send("Wrong credentials");
             }

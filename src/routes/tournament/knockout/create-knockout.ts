@@ -1,8 +1,8 @@
 import { JsonSchemaToTsProvider } from "@fastify/type-provider-json-schema-to-ts";
 import { FastifyInstance } from "fastify/types/instance";
-import type { PoolClient, QueryResult } from "pg";
-import { verifyPermission } from "../../../utils/fastify/pgAuthenticationUtils";
+import type { PoolClient } from "pg";
 import { createKnockoutMatches } from "../../../utils/fastify/pgKnockoutTournamentUtils";
+import { verifyPermission } from "../../../utils/fastify/pgAuthenticationUtils";
 
 const bodyJsonSchema = {
   type: "object",
@@ -22,14 +22,6 @@ const bodyJsonSchema = {
     },
   },
   required: ["name", "participants"],
-} as const;
-
-const headerJsonSchema = {
-  type: "object",
-  properties: {
-    authorization: { type: "string" },
-  },
-  required: ["authorization"],
 } as const;
 
 const responseJsonSchema = {
@@ -70,7 +62,6 @@ export default async function createKnockout(
   const routeOptions = {
     schema: {
       body: bodyJsonSchema,
-      headers: headerJsonSchema,
       response: responseJsonSchema,
     },
     onRequest: [fastify.authenticate], // fastify-jwt
@@ -85,15 +76,16 @@ export default async function createKnockout(
         async (err: Error, client: PoolClient, release: any) => {
           if (err) {
             release();
-            reply.code(400).send(err.message);
+            return reply.code(400).send(err.message);
           }
 
           if (!(await verifyPermission(1, request, reply, client, release))) {
             return;
           }
 
-          await client.query(
-            `
+          try {
+            const result = await client.query(
+              `
             WITH new_tournament AS (
               INSERT INTO
                 knockout_tournament.tournaments (name)
@@ -125,24 +117,22 @@ export default async function createKnockout(
             GROUP BY
               t.id,
               t.name
-          `,
-            async (err: Error, result: QueryResult<any>) => {
-              if (err) {
-                release();
-                return reply.code(400).send(err.message);
-              }
+          `
+            );
 
-              const tournament = result.rows[0];
-              await createKnockoutMatches(
-                tournament,
-                request,
-                reply,
-                client,
-                release
-              );
-              return reply.code(200).send(tournament);
-            }
-          );
+            const tournament = result.rows[0];
+            await createKnockoutMatches(
+              tournament,
+              request,
+              reply,
+              client,
+              reply
+            );
+            return reply.code(200).send(tournament);
+          } catch (err) {
+            release();
+            return reply.code(400).send(err as string);
+          }
         }
       );
     });

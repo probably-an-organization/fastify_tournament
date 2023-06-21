@@ -39,21 +39,30 @@ fastify.register(fastifyPostgres, {
   connectionString: FASTIFY_PG_CONNECTION_STRING,
 });
 
+fastify.register(fastifyCookie);
+
 fastify.register(fastifyJwt, {
   secret: JWT_SECRET,
+  cookie: {
+    cookieName: "token",
+    signed: false,
+  },
+  // sign: {
+  //   expiresIn: "30min",
+  // },
 });
 
 fastify.decorate("authenticate", async (request: any, reply: any) => {
   try {
-    await request.jwtVerify();
+    await request.jwtVerify(request.cookies.token);
   } catch (err) {
-    reply.send(err);
+    return reply.code(400).send(err);
   }
 });
 
-fastify.register(fastifyCookie);
-
 fastify.register(fastifyCors, {
+  credentials: true,
+  optionsSuccessStatus: 200,
   methods: "GET,PUT,POST,DELETE,OPTIONS",
   origin: (origin, callback) => {
     if (origin === APP_ORIGIN) {

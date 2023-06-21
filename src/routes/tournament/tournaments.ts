@@ -31,9 +31,8 @@ export default async function login(
         client.query(
           `
             SELECT
-              tournament_id,
-              name,
-              participants
+              id as _id,
+              name
             FROM
               knockout_tournament.tournaments
           `,
