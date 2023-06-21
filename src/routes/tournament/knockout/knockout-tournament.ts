@@ -88,8 +88,6 @@ export default async function knockoutTournament(
               return reply.code(400).send(err.message);
             }
 
-            console.log("RESULT", result.rows);
-
             if (result.rows.length > 0) {
               return reply.code(200).send(result.rows[0]);
             } else {
