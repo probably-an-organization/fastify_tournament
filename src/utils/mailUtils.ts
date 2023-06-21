@@ -1,6 +1,6 @@
 import nodemailer from "nodemailer";
 import SMTPTransport from "nodemailer/lib/smtp-transport";
-import { getEnvironmentVariable } from "../utils/envUtil";
+import { getEnvironmentVariable } from "./envUtils";
 
 type MailData = {
   from: string;
@@ -34,7 +34,9 @@ const verifyMail = async (): Promise<boolean> => {
 };
 
 const sendMail = async (data: MailData): Promise<boolean> => {
-  var result: SMTPTransport.SentMessageInfo = await smtpTransport.sendMail(data);
+  var result: SMTPTransport.SentMessageInfo = await smtpTransport.sendMail(
+    data
+  );
   return result.accepted.includes(data.to);
 };
 

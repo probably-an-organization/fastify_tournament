@@ -1,7 +1,7 @@
 import { FastifyInstance } from "fastify/types/instance";
-import { hashString } from "../../utils/hashUtil";
-import { generateToken } from "../../utils/tokenUtil";
-import { sendMail } from "../../utils/mailUtil";
+import { hashString } from "../../utils/hashUtils";
+import { generateToken } from "../../utils/tokenUtils";
+import { sendMail } from "../../utils/mailUtils";
 import { APP_ORIGIN } from "../../configs/setupConfig";
 import { JsonSchemaToTsProvider } from "@fastify/type-provider-json-schema-to-ts";
 import type { PoolClient, QueryResult } from "pg";

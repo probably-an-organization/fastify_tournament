@@ -1,5 +1,5 @@
 import { FastifyInstance } from "fastify/types/instance";
-import { hashCompare } from "../../utils/hashUtil";
+import { hashCompare } from "../../utils/hashUtils";
 import { JsonSchemaToTsProvider } from "@fastify/type-provider-json-schema-to-ts";
 import type { PoolClient, QueryResult } from "pg";
 

@@ -41,24 +41,59 @@ export default async function knockoutTournament(
         client.query(
           `
             SELECT
-              a.tournament_id,
-              a.name,
-              a.participants
+              t.id as _id,
+              t.name,
+              participants,
+              matches
             FROM
-              knockout_tournament.tournaments AS a
-            WHERE
-              a.tournament_id = $1::BIGINT
+              knockout_tournament.tournaments AS t
+            LEFT JOIN LATERAL (
+              SELECT
+                json_agg(
+                  json_build_object(
+                    '_id', p.id,
+                    'name', p.name,
+                    'team', p.team
+                  )
+                ) AS participants
+              FROM
+                knockout_tournament.participants AS p
+              WHERE
+                p.tournament_id = $1::BIGINT
+            ) p ON true
+            LEFT JOIN LATERAL (
+              SELECT
+                json_agg(
+                  json_build_object(
+                    '_id', m.id,
+                    'status', m.status,
+                    'date', m.date,
+                    'participant_1_id', m.participant_1_id,
+                    'participant_2_id', m.participant_2_id,
+                    'winner', m.winner,
+                    'match_number', m.match_number,
+                    'stage_number', m.stage_number
+                  )
+                ) AS matches
+              FROM
+                knockout_tournament.matches AS m
+              WHERE
+                m.tournament_id = $1::BIGINT
+            ) m ON true
           `,
           [id],
           (err: Error, result: QueryResult<any>) => {
             release();
             if (err) {
-              return reply.code(400).send(err);
+              return reply.code(400).send(err.message);
             }
-            if (result) {
-              reply.code(200).send(result.rows[0]);
+
+            console.log("RESULT", result.rows);
+
+            if (result.rows.length > 0) {
+              return reply.code(200).send(result.rows[0]);
             } else {
-              reply.code(400).send("No knockout tournament found");
+              return reply.code(404).send("No knockout tournament found");
             }
           }
         );

@@ -75,7 +75,7 @@ fastify.register(routes);
 /* * * * * * * * * * * * * * * * * * * *
  * CUSTOM INITIALIZATION
  * * * * * * * * * * * * * * * * * * * */
-import { verifyMail } from "./src/utils/mailUtil";
+import { verifyMail } from "./src/utils/mailUtils";
 
 async function initialize() {
   console.log("[/src/index.ts] initializing...");

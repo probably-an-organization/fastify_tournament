@@ -1,4 +1,4 @@
-import { EnvironmentType, getEnvironmentVariable } from "../utils/envUtil";
+import { EnvironmentType, getEnvironmentVariable } from "../utils/envUtils";
 
 type FastifyConfig = {
   logger: boolean;
@@ -10,8 +10,10 @@ export const FASTIFY_CONFIG: FastifyConfig = {
 
 export const FASTIFY_PG_CONNECTION_STRING: string = `postgres://${getEnvironmentVariable(
   "POSTGRES_USER"
-)}:${encodeURIComponent(getEnvironmentVariable("POSTGRES_PASSWORD"))}@${getEnvironmentVariable(
-  "POSTGRES_HOST"
-)}/${getEnvironmentVariable("POSTGRES_DATABASE")}`;
+)}:${encodeURIComponent(
+  getEnvironmentVariable("POSTGRES_PASSWORD")
+)}@${getEnvironmentVariable("POSTGRES_HOST")}/${getEnvironmentVariable(
+  "POSTGRES_DATABASE"
+)}`;
 
 export const FASTIFY_ROUTES = [];

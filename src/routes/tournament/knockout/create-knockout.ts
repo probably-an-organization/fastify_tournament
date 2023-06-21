@@ -1,7 +1,8 @@
 import { JsonSchemaToTsProvider } from "@fastify/type-provider-json-schema-to-ts";
 import { FastifyInstance } from "fastify/types/instance";
 import type { PoolClient, QueryResult } from "pg";
-import { verifyPermission } from "../../../utils/fastifyUtil";
+import { verifyPermission } from "../../../utils/fastify/pgAuthenticationUtils";
+import { createKnockoutMatches } from "../../../utils/fastify/pgKnockoutTournamentUtils";
 
 const bodyJsonSchema = {
   type: "object",
@@ -80,86 +81,69 @@ export default async function createKnockout(
     .post("/create-knockout", routeOptions, (request, reply): void => {
       const { name, participants } = request.body;
 
-      fastify.pg.connect((err: Error, client: PoolClient, release: any) => {
-        if (err) reply.code(400).send(err.message);
+      fastify.pg.connect(
+        async (err: Error, client: PoolClient, release: any) => {
+          if (err) {
+            release();
+            reply.code(400).send(err.message);
+          }
 
-        verifyPermission(1, request, reply, client, release, () => {
-          client.query(
+          if (!(await verifyPermission(1, request, reply, client, release))) {
+            return;
+          }
+
+          await client.query(
             `
-              WITH new_tournament AS (
-                INSERT INTO
-                  knockout_tournament.tournaments (name)
-                VALUES
-                  ('${name}'::VARCHAR)
-                RETURNING
-                  id,
-                  name
-              ),
-              new_participants AS (
-                INSERT INTO
-                  knockout_tournament.participants (tournament_id, name, team)
-                VALUES ${participants.map(
-                  (p) =>
-                    `((SELECT id FROM new_tournament), '${p.name}'::VARCHAR, '${p.team}'::VARCHAR)`
-                )}
-                RETURNING
-                  id AS _id,
-                  name,
-                  team
-              )
-              SELECT
-                  t.id AS _id,
-                  t.name AS name,
-                  jsonb_agg(p) AS participants
-              FROM
-                new_tournament as t,
-                new_participants as p
-              GROUP BY
-                t.id,
-                t.name
-            `,
-            (err: Error, result: QueryResult<any>) => {
+            WITH new_tournament AS (
+              INSERT INTO
+                knockout_tournament.tournaments (name)
+              VALUES
+                ('${name}'::VARCHAR)
+              RETURNING
+                id,
+                name
+            ),
+            new_participants AS (
+              INSERT INTO
+                knockout_tournament.participants (tournament_id, name, team)
+              VALUES ${participants.map(
+                (p) =>
+                  `((SELECT id FROM new_tournament), '${p.name}'::VARCHAR, '${p.team}'::VARCHAR)`
+              )}
+              RETURNING
+                id AS _id,
+                name,
+                team
+            )
+            SELECT
+                t.id AS _id,
+                t.name AS name,
+                jsonb_agg(p) AS participants
+            FROM
+              new_tournament as t,
+              new_participants as p
+            GROUP BY
+              t.id,
+              t.name
+          `,
+            async (err: Error, result: QueryResult<any>) => {
               if (err) {
                 release();
                 return reply.code(400).send(err.message);
               }
 
               const tournament = result.rows[0];
-
-              // TODO currently only generates the first stage! (e.g. top 8 -> first 8 matches)
-              client.query(
-                `
-                INSERT INTO
-                  knockout_tournament.matches (tournament_id, status, participant_1_id, participant_2_id, winner, match_number)
-                VALUES ${Array.from({
-                  length: Math.ceil(tournament.participants.length / 2),
-                }).map(
-                  (_, i) => `(
-                  '${tournament._id}'::BIGINT,
-                  'future'::knockout_tournament.match_status_types,
-                  '${tournament.participants[i * 2]._id}'::BIGINT,
-                  ${
-                    tournament.participants[i * 2 + 1]
-                      ? `'${tournament.participants[i * 2 + 1]._id}'::BIGINT`
-                      : "NULL"
-                  },
-                  '0'::CHAR,
-                  '${i}'::SMALLINT
-                )`
-                )}
-              `,
-                (err2: Error, result2: QueryResult<any>) => {
-                  if (err2) {
-                    release();
-                    return reply.code(400).send(err2.message);
-                  }
-
-                  reply.code(200).send(tournament);
-                }
+              await createKnockoutMatches(
+                tournament,
+                request,
+                reply,
+                client,
+                release
               );
+              return reply.code(200).send(tournament);
             }
           );
-        });
-      });
+        }
+      );
     });
 }
