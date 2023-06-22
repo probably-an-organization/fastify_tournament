@@ -22,13 +22,8 @@ export default async function knockoutTournament(
 ): Promise<void> {
   const routeOptions = {
     schema: {
-      // body: {},
-      // querystring: {},
       params: paramsJsonSchema,
-      // header: {},
-      // response: {},
     },
-    // ...
   };
 
   fastify

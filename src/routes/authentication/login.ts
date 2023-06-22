@@ -35,9 +35,6 @@ export default async function login(
   const routeOptions = {
     schema: {
       body: bodyJsonSchema,
-      // querystring: {},
-      // params: {},
-      // header: {},
       response: responseJsonSchema,
     },
   };
@@ -47,36 +44,37 @@ export default async function login(
     .post("/login", routeOptions, (request, reply): void => {
       const { email, password } = request.body;
 
-      fastify.pg.connect((err: Error, client: PoolClient, release: any) => {
-        if (err) reply.code(400).send(err.message);
+      fastify.pg.connect(
+        async (err: Error, client: PoolClient, release: any) => {
+          if (err) reply.code(400).send(err.message);
 
-        client.query(
-          `
-            SELECT
-              u.id AS _id,
-              u.username,
-              u.password,
-              u.verified
-            FROM
-              authentication.users AS u
-            WHERE
-              u.email = $1::VARCHAR
-          `,
-          [email],
-          async (err: Error, result: QueryResult<any>) => {
-            release();
-            if (err) {
-              return reply.code(400).send(err.message);
-            }
+          try {
+            const result = await client.query(
+              `
+              SELECT
+                u.id AS _id,
+                u.username,
+                u.password,
+                u.verified
+              FROM
+                authentication.users AS u
+              WHERE
+                u.email = $1::VARCHAR
+            `,
+              [email]
+            );
+
             if (result.rowCount !== 1) {
-              reply.code(400).send("User not found");
+              return reply.code(400).send("User not found");
             }
+
             const userData: {
               _id: number;
               username: string;
               password: string;
               verified: boolean;
             } = result.rows[0];
+
             if (await hashCompare(password, userData.password)) {
               const token: string = await reply.jwtSign(
                 {
@@ -87,7 +85,7 @@ export default async function login(
                 }
               );
 
-              reply
+              return reply
                 .code(200)
                 .header("Access-Control-Allow-Credentials", "true")
                 .header("Access-Control-Allow-Headers", "*")
@@ -101,13 +99,12 @@ export default async function login(
                   sameSite: "lax",
                 })
                 .send("Success");
-            } else {
-              reply.code(400).send("Wrong credentials");
             }
+          } catch (err) {
+            release();
+            return reply.code(400).send(err as string);
           }
-        );
-      });
-      /* async */
-      // return reply
+        }
+      );
     });
 }

@@ -2,7 +2,7 @@ import { JsonSchemaToTsProvider } from "@fastify/type-provider-json-schema-to-ts
 import { FastifyInstance } from "fastify/types/instance";
 import type { PoolClient } from "pg";
 import { createKnockoutMatches } from "../../../utils/fastify/pgKnockoutTournamentUtils";
-import { verifyPermission } from "../../../utils/fastify/pgAuthenticationUtils";
+import { verifyPermission } from "../../../utils/fastify/pgPermissionUtils";
 
 const bodyJsonSchema = {
   type: "object",
@@ -79,11 +79,8 @@ export default async function createKnockout(
             return reply.code(400).send(err.message);
           }
 
-          if (!(await verifyPermission(1, request, reply, client, release))) {
-            return;
-          }
-
           try {
+            await verifyPermission(1, request, client);
             const result = await client.query(
               `
             WITH new_tournament AS (
@@ -121,13 +118,7 @@ export default async function createKnockout(
             );
 
             const tournament = result.rows[0];
-            await createKnockoutMatches(
-              tournament,
-              request,
-              reply,
-              client,
-              reply
-            );
+            await createKnockoutMatches(tournament, client);
             return reply.code(200).send(tournament);
           } catch (err) {
             release();

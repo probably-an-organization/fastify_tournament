@@ -18,20 +18,16 @@ export const createKnockoutMatches = async (
       team: string;
     }[];
   },
-  request: any,
-  reply: any,
-  client: PoolClient,
-  release: any
+  client: PoolClient
 ): Promise<object | undefined> => {
   var matches = [];
   var currentStageMatches: number = Math.ceil(
     tournament.participants.length / 2
   );
   var currentStageNumber: number = 0;
-  try {
-    while (currentStageMatches >= 1) {
-      const result = await client.query(
-        `
+  while (currentStageMatches >= 1) {
+    const result = await client.query(
+      `
           INSERT INTO
             knockout_tournament.matches (tournament_id, participant_1_id, participant_2_id, match_number, stage_number)
           VALUES
@@ -58,14 +54,10 @@ export const createKnockoutMatches = async (
             id AS _id,
             tournament_id
         `
-      );
-      matches.push(result.rows);
-      currentStageMatches = currentStageMatches / 2;
-      currentStageNumber++;
-    }
-  } catch (err) {
-    release();
-    return reply.code(400).send(err);
+    );
+    matches.push(result.rows);
+    currentStageMatches = currentStageMatches / 2;
+    currentStageNumber++;
   }
 
   return matches;

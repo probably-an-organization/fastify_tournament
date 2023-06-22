@@ -1,6 +1,6 @@
 import { JsonSchemaToTsProvider } from "@fastify/type-provider-json-schema-to-ts";
 import { FastifyInstance } from "fastify/types/instance";
-import type { PoolClient, QueryResult } from "pg";
+import type { PoolClient } from "pg";
 
 const bodyJsonSchema = {
   type: "object",
@@ -60,12 +60,12 @@ export default async function login(
   const routeOptions = {
     schema: {
       body: bodyJsonSchema,
-      // querystring: {},
-      // params: {},
-      // header: {},
+      // querystring: querystringJsonSchema,
+      // params: paramsJsonSchema,
+      // header: headerJsonSchema,
       response: responseJsonSchema,
     },
-    // ...
+    // onRequest: [fastify.authenticate] // fastify.decorate("/authenticate", ...)
   };
 
   fastify
@@ -76,25 +76,23 @@ export default async function login(
       async (request, reply): Promise<void> => {
         const { foo, bar } = request.body;
 
-        fastify.pg.connect((err: Error, client: PoolClient, release: any) => {
-          if (err) return reply.code(400).send(err.message);
+        fastify.pg.connect(
+          async (err: Error, client: PoolClient, release: any) => {
+            if (err) return reply.code(400).send(err.message);
 
-          client.query(
-            "SELECT tournament_id, name, participants FROM knockout_tournament.tournaments",
-            (err: Error, result: QueryResult<any>) => {
-              release();
-              if (err) {
-                reply.code(400).send(err.message);
-              }
-              reply
+            try {
+              const result = await client.query(
+                "SELECT tournament_id, name, participants FROM knockout_tournament.tournaments"
+              );
+              return reply
                 .code(200)
                 .send({ message: `Found ${result.rows.length} results` });
+            } catch (err) {
+              release();
+              return reply.code(400).send(err as string);
             }
-          );
-        });
-
-        /* async */
-        return reply;
+          }
+        );
       }
     );
 }

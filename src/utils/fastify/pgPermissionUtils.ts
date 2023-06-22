@@ -11,20 +11,16 @@ import type { PoolClient } from "pg";
 export const verifyPermission = async (
   actionId: number,
   request: any,
-  reply: any,
-  client: PoolClient,
-  release: any
-): Promise<boolean> => {
-  try {
-    // get token (from cookies), decode
-    const { _id } = await request.jwtVerify(request.cookies.token);
-    if (!_id) {
-      reply.code(400).send("No token");
-      return false;
-    }
+  client: PoolClient
+): Promise<void> => {
+  // get token (from cookies), decode
+  const { _id } = await request.jwtVerify(request.cookies.token);
+  if (!_id) {
+    throw Error("No authentication token");
+  }
 
-    const result = await client.query(
-      `
+  const result = await client.query(
+    `
       SELECT
         COUNT (ra.role_id)
       FROM
@@ -42,18 +38,10 @@ export const verifyPermission = async (
       AND
         u.id = $2::BIGINT
     `,
-      [actionId, _id]
-    );
+    [actionId, _id]
+  );
 
-    if (result.rows[0].count < 1) {
-      release();
-      reply.code(400).send("No permission");
-      return false;
-    }
-    return true;
-  } catch (err) {
-    release();
-    reply.code(400).send(err);
-    return false;
+  if (result.rows[0].count < 1) {
+    throw Error("No permission");
   }
 };
