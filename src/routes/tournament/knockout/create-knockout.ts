@@ -116,9 +116,10 @@ export default async function createKnockout(
               t.name
           `
             );
-
             const tournament = result.rows[0];
             await createKnockoutMatches(tournament, client);
+            release();
+
             return reply.code(200).send(tournament);
           } catch (err) {
             release();

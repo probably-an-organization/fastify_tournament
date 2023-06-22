@@ -78,12 +78,16 @@ export default async function login(
 
         fastify.pg.connect(
           async (err: Error, client: PoolClient, release: any) => {
-            if (err) return reply.code(400).send(err.message);
+            if (err) {
+              release();
+              return reply.code(400).send(err.message);
+            }
 
             try {
               const result = await client.query(
                 "SELECT tournament_id, name, participants FROM knockout_tournament.tournaments"
               );
+              release();
               return reply
                 .code(200)
                 .send({ message: `Found ${result.rows.length} results` });

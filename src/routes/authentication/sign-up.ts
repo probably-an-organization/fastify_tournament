@@ -57,11 +57,16 @@ export default async function signUp(
       const hashedPassword = await hashString(password);
       const token = generateToken(30); // TODO not collision-free
 
-      fastify.pg.connect((err: Error, client: PoolClient, release: any) => {
-        if (err) reply.code(400).send(err.message);
+      fastify.pg.connect(
+        async (err: Error, client: PoolClient, release: any) => {
+          if (err) {
+            release();
+            return reply.code(400).send(err.message);
+          }
 
-        client.query(
-          `
+          try {
+            const result = await client.query(
+              `
             WITH data (username, email, password, token, role_id) AS (
               VALUES
                 ($1::VARCHAR, $2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::INTEGER)
@@ -97,12 +102,9 @@ export default async function signUp(
               user_id,
               token
           `,
-          [username, email, hashedPassword, token, roleId],
-          (err: Error, result: QueryResult<any>) => {
+              [username, email, hashedPassword, token, roleId]
+            );
             release();
-            if (err) {
-              return reply.code(400).send(err.message);
-            }
 
             if (result.rowCount === 1) {
               sendMail({
@@ -112,14 +114,15 @@ export default async function signUp(
                 text: `Validate account: ${APP_ORIGIN}/user-verification?${token}`,
                 html: `<p>Validate account: ${APP_ORIGIN}/user-verification?${token}</p>`,
               });
-              reply.code(200).send({ message: "Success" });
+              return reply.code(200).send({ message: "Success" });
             } else {
-              reply.code(400).send("Username or email already in use");
+              return reply.code(400).send("Username or email already in use");
             }
+          } catch (err) {
+            release();
+            return reply.code(400).send(err as string);
           }
-        );
-      });
-      /* async */
-      return reply;
+        }
+      );
     });
 }

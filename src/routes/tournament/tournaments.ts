@@ -29,14 +29,19 @@ export default async function tournaments(
   fastify
     .withTypeProvider<JsonSchemaToTsProvider>()
     .get("/tournaments/:userId?", routeOptions, (request, reply): void => {
+      // TODO verify admin permission
       const { userId } = request.params;
 
-      fastify.pg.connect((err: Error, client: PoolClient, release: any) => {
-        if (err) return reply.code(400).send(err);
-
-        client.query(
-          userId
-            ? `
+      fastify.pg.connect(
+        async (err: Error, client: PoolClient, release: any) => {
+          if (err) {
+            release();
+            return reply.code(400).send(err);
+          }
+          try {
+            const result = await client.query(
+              userId
+                ? `
               SELECT
                 t.id as _id,
                 t.name,
@@ -56,7 +61,7 @@ export default async function tournaments(
               GROUP BY
                 t.id
             `
-            : `
+                : `
             SELECT
               t.id as _id,
               t.name,
@@ -69,15 +74,15 @@ export default async function tournaments(
               t.id = p.tournament_id
             GROUP BY
               t.id
-            `,
-          (err: Error, result: QueryResult<any>) => {
+            `
+            );
             release();
-            if (err) {
-              return reply.code(400).send(err);
-            }
-            reply.code(200).send(result.rows);
+            return reply.code(200).send(result.rows);
+          } catch (err) {
+            release();
+            return reply.code(400).send(err as string);
           }
-        );
-      });
+        }
+      );
     });
 }

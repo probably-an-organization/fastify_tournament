@@ -1,6 +1,6 @@
-import { FastifyInstance } from "fastify/types/instance";
 import { JsonSchemaToTsProvider } from "@fastify/type-provider-json-schema-to-ts";
-import type { PoolClient, QueryResult } from "pg";
+import { FastifyInstance } from "fastify/types/instance";
+import type { PoolClient } from "pg";
 
 const responseJsonSchema = {
   200: {
@@ -8,12 +8,11 @@ const responseJsonSchema = {
     items: {
       type: "object",
       properties: {
-        userId: { type: "number" },
-        username: { type: "string" },
-        email: { type: "string" },
-        verified: { type: "boolean" },
-        roleId: { type: "number" },
+        _id: { type: "number" },
+        name: { type: "string" },
+        participants: { type: "number" },
       },
+      required: ["_id", "name", "participants"],
     },
   },
   400: {
@@ -26,37 +25,52 @@ const responseJsonSchema = {
  * @param {FastifyInstance} fastify encapsulated fastify instance
  * @param {Object} options plugin options, refer to https://www.fastify.io/docs/latest/Reference/Plugins/#plugin-options
  */
-export default async function users(
+export default async function myTournaments(
   fastify: FastifyInstance,
   options: Object
 ): Promise<void> {
   const routeOptions = {
     schema: {
-      // body: {},
-      // querystring: {},
-      // params: {},
-      // header: {},
       response: responseJsonSchema,
     },
+    onRequest: [fastify.authenticate],
   };
 
   fastify
     .withTypeProvider<JsonSchemaToTsProvider>()
-    .get("/users", routeOptions, (request, reply): void => {
+    .get("/my-tournaments", routeOptions, (request, reply): void => {
+      const { _id } = request.user;
+
       fastify.pg.connect(
         async (err: Error, client: PoolClient, release: any) => {
           if (err) {
             release();
             return reply.code(400).send(err.message);
           }
+
           try {
             const result = await client.query(
               `
-            SELECT
-              *
-            FROM
-              authentication.users
-          `
+              SELECT
+                t.id as _id,
+                t.name,
+                COUNT(p.tournament_id) AS participants
+              FROM
+                knockout_tournament.tournaments AS t
+              INNER JOIN
+                knockout_tournament.tournaments_users AS tu
+              ON
+                t.id = tu.tournament_id
+              LEFT JOIN
+                knockout_tournament.participants AS p
+              ON
+                t.id = p.tournament_id
+              WHERE
+                tu.user_id = $1::BIGINT
+              GROUP BY
+                t.id
+            `,
+              [_id]
             );
             release();
             return reply.code(200).send(result.rows);

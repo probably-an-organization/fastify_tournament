@@ -35,11 +35,17 @@ export default async function user(
     .withTypeProvider<JsonSchemaToTsProvider>()
     .get("/user/:id", routeOptions, (request, reply): void => {
       const { id } = request.params;
-      fastify.pg.connect((err: Error, client: PoolClient, release: any) => {
-        if (err) return reply.code(400).send(err);
 
-        client.query(
-          `
+      fastify.pg.connect(
+        async (err: Error, client: PoolClient, release: any) => {
+          if (err) {
+            release();
+            return reply.code(400).send(err.message);
+          }
+
+          try {
+            const result = await client.query(
+              `
             SELECT
               a.user_id,
               a.username,
@@ -51,19 +57,20 @@ export default async function user(
             WHERE
               a.user_id = $1::BIGINT
           `,
-          [id],
-          (err: Error, result: QueryResult<any>) => {
+              [id]
+            );
             release();
-            if (err) {
-              return reply.code(400).send(err);
-            }
+
             if (result) {
-              reply.code(200).send(result.rows[0]);
+              return reply.code(200).send(result.rows[0]);
             } else {
-              reply.code(400).send("No user found");
+              return reply.code(400).send("No user found");
             }
+          } catch (err) {
+            release();
+            return reply.code(400).send(err as string);
           }
-        );
-      });
+        }
+      );
     });
 }

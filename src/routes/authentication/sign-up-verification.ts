@@ -1,6 +1,6 @@
 import { JsonSchemaToTsProvider } from "@fastify/type-provider-json-schema-to-ts";
 import { FastifyInstance } from "fastify/types/instance";
-import type { PoolClient, QueryResult } from "pg";
+import type { PoolClient } from "pg";
 
 const querystringJsonSchema = {
   type: "object",
@@ -29,7 +29,7 @@ const responseJsonSchema = {
  * @param {FastifyInstance} fastify encapsulated fastify instance
  * @param {Object} options plugin options, refer to https://www.fastify.io/docs/latest/Reference/Plugins/#plugin-options
  */
-export default async function userVerification(
+export default async function signUpVerification(
   fastify: FastifyInstance,
   options: Object
 ): Promise<void> {
@@ -45,12 +45,17 @@ export default async function userVerification(
 
   fastify
     .withTypeProvider<JsonSchemaToTsProvider>()
-    .get("/user-verification", routeOptions, (request, reply): void => {
-      fastify.pg.connect((err: Error, client: PoolClient, release: any) => {
-        if (err) reply.code(400).send(err.message);
+    .get("/sign-up-verification", routeOptions, (request, reply): void => {
+      fastify.pg.connect(
+        async (err: Error, client: PoolClient, release: any) => {
+          if (err) {
+            release();
+            return reply.code(400).send(err.message);
+          }
 
-        client.query(
-          `
+          try {
+            const result = await client.query(
+              `
             WITH data (token) AS (
               VALUES
                 ($1::VARCHAR)
@@ -77,22 +82,24 @@ export default async function userVerification(
             WHERE
               vu.id = v.user_id;
           `,
-          [request.query.token],
-          (err: Error, result: QueryResult<any>) => {
+              [request.query.token]
+            );
             release();
-            if (err) {
-              return reply.code(400).send(err.message);
-            }
 
             if (result.rowCount === 1) {
-              reply.code(200).send({ message: "User successfully verified" });
+              return reply
+                .code(200)
+                .send({ message: "User successfully verified" });
             } else {
-              reply.code(400).send("Error, no verifications entry found");
+              return reply
+                .code(400)
+                .send("Error, no verifications entry found");
             }
+          } catch (err) {
+            release();
+            return reply.code(400).send(err as string);
           }
-        );
-      });
-      /* async */
-      // return reply;
+        }
+      );
     });
 }

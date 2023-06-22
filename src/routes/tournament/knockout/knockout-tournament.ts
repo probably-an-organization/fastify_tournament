@@ -31,12 +31,16 @@ export default async function knockoutTournament(
     .get("/knockout-tournament/:id", routeOptions, (request, reply): void => {
       const { id } = request.params;
 
-      console.log("AYY", id);
-      fastify.pg.connect((err: Error, client: PoolClient, release: any) => {
-        if (err) return reply.code(400).send(err);
+      fastify.pg.connect(
+        async (err: Error, client: PoolClient, release: any) => {
+          if (err) {
+            release();
+            return reply.code(400).send(err);
+          }
 
-        client.query(
-          `
+          try {
+            const result = await client.query(
+              `
             SELECT
               t.id as _id,
               t.name,
@@ -78,20 +82,19 @@ export default async function knockoutTournament(
                 m.tournament_id = $1::BIGINT
             ) m ON true
           `,
-          [id],
-          (err: Error, result: QueryResult<any>) => {
+              [id]
+            );
             release();
-            if (err) {
-              return reply.code(400).send(err.message);
-            }
-
             if (result.rows.length > 0) {
               return reply.code(200).send(result.rows[0]);
             } else {
               return reply.code(404).send("No knockout tournament found");
             }
+          } catch (err) {
+            release();
+            return reply.code(400).send(err as string);
           }
-        );
-      });
+        }
+      );
     });
 }

@@ -46,7 +46,10 @@ export default async function login(
 
       fastify.pg.connect(
         async (err: Error, client: PoolClient, release: any) => {
-          if (err) reply.code(400).send(err.message);
+          if (err) {
+            release();
+            return reply.code(400).send(err.message);
+          }
 
           try {
             const result = await client.query(
@@ -63,6 +66,7 @@ export default async function login(
             `,
               [email]
             );
+            release();
 
             if (result.rowCount !== 1) {
               return reply.code(400).send("User not found");
