@@ -1,12 +1,10 @@
 import type { PoolClient } from "pg";
 
 /**
+ * Function to create the knockout matches according to the provided tournament data
  * @param tournament
- * @param request
- * @param reply
  * @param client
- * @param release
- * @param onSuccess
+ * @param lineups
  */
 export const createKnockoutMatches = async (
   tournament: {
@@ -35,9 +33,9 @@ export const createKnockoutMatches = async (
     '${stageNumber}'::SMALLINT
   )`;
 
-  var matches = [];
-  var currentStageNumber: number = 0;
-  var currentStageMatches: number = Math.ceil(
+  let matches = [];
+  let currentStageNumber: number = 0;
+  let currentStageMatches: number = Math.ceil(
     tournament.participants.length / 2
   );
   if (currentStageNumber === 0 && lineups) {

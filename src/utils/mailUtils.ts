@@ -34,7 +34,7 @@ const verifyMail = async (): Promise<boolean> => {
 };
 
 const sendMail = async (data: MailData): Promise<boolean> => {
-  var result: SMTPTransport.SentMessageInfo = await smtpTransport.sendMail(
+  const result: SMTPTransport.SentMessageInfo = await smtpTransport.sendMail(
     data
   );
   return result.accepted.includes(data.to);
