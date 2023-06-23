@@ -1,0 +1,2 @@
+src/@types/fastify/index.d.ts
+src/routes/__template/index.ts

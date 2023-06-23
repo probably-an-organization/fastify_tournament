@@ -11,11 +11,11 @@ import loginVerification from "./login-verification";
 /**
  * Encapsulates the routes
  * @param {FastifyInstance} fastify  Encapsulated Fastify Instance
- * @param {Object} options plugin options, refer to https://www.fastify.io/docs/latest/Reference/Plugins/#plugin-options
+ * @param {object} options plugin options, refer to https://www.fastify.io/docs/latest/Reference/Plugins/#plugin-options
  */
 export default async function authenticationRoutes(
   fastify: FastifyInstance,
-  options: Object
+  options: object
 ): Promise<void> {
   fastify.register(signUp);
   fastify.register(signUpVerification);

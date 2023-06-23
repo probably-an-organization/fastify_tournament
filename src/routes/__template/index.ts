@@ -51,18 +51,18 @@ const responseJsonSchema = {
 /**
  * A plugin that provide encapsulated routes
  * @param {FastifyInstance} fastify encapsulated fastify instance
- * @param {Object} options plugin options, refer to https://www.fastify.io/docs/latest/Reference/Plugins/#plugin-options
+ * @param {object} options plugin options, refer to https://www.fastify.io/docs/latest/Reference/Plugins/#plugin-options
  */
 export default async function login(
   fastify: FastifyInstance,
-  options: Object
+  options: object
 ): Promise<void> {
   const routeOptions = {
     schema: {
       body: bodyJsonSchema,
-      // querystring: querystringJsonSchema,
-      // params: paramsJsonSchema,
-      // header: headerJsonSchema,
+      querystring: querystringJsonSchema,
+      params: paramsJsonSchema,
+      headers: headersJsonSchema,
       response: responseJsonSchema,
     },
     // onRequest: [fastify.authenticate] // fastify.decorate("/authenticate", ...)

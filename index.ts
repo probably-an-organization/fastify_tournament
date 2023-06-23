@@ -25,7 +25,7 @@ fastify.addContentTypeParser(
   { parseAs: "string" },
   (req, body, done) => {
     try {
-      let json: string = JSON.parse(String(body));
+      const json = JSON.parse(String(body));
       done(null, json);
     } catch (err: unknown) {
       if (err instanceof Error) {

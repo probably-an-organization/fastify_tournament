@@ -8,7 +8,7 @@ export const FASTIFY_CONFIG: FastifyConfig = {
   logger: getEnvironmentVariable("FASTIFY_LOGGER", EnvironmentType.Boolean),
 };
 
-export const FASTIFY_PG_CONNECTION_STRING: string = `postgres://${getEnvironmentVariable(
+export const FASTIFY_PG_CONNECTION_STRING = `postgres://${getEnvironmentVariable(
   "POSTGRES_USER"
 )}:${encodeURIComponent(
   getEnvironmentVariable("POSTGRES_PASSWORD")

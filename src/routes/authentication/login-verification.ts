@@ -13,11 +13,11 @@ const responseJsonSchema = {
 /**
  * A plugin that provide encapsulated routes
  * @param {FastifyInstance} fastify encapsulated fastify instance
- * @param {Object} options plugin options, refer to https://www.fastify.io/docs/latest/Reference/Plugins/#plugin-options
+ * @param {object} options plugin options, refer to https://www.fastify.io/docs/latest/Reference/Plugins/#plugin-options
  */
 export default async function loginVerification(
   fastify: FastifyInstance,
-  options: Object
+  options: object
 ): Promise<void> {
   const routeOptions = {
     schema: {

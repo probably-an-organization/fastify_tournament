@@ -1,6 +1,6 @@
 import { JsonSchemaToTsProvider } from "@fastify/type-provider-json-schema-to-ts";
 import { FastifyInstance } from "fastify/types/instance";
-import type { PoolClient, QueryResult } from "pg";
+import type { PoolClient } from "pg";
 
 const paramsJsonSchema = {
   type: "object",
@@ -13,11 +13,11 @@ const paramsJsonSchema = {
 /**
  * A plugin that provide encapsulated routes
  * @param {FastifyInstance} fastify encapsulated fastify instance
- * @param {Object} options plugin options, refer to https://www.fastify.io/docs/latest/Reference/Plugins/#plugin-options
+ * @param {object} options plugin options, refer to https://www.fastify.io/docs/latest/Reference/Plugins/#plugin-options
  */
 export default async function tournaments(
   fastify: FastifyInstance,
-  options: Object
+  options: object
 ): Promise<void> {
   const routeOptions = {
     schema: {

@@ -6,11 +6,11 @@ import knockoutTournament from "./knockout-tournament";
 /**
  * Encapsulates the routes
  * @param {FastifyInstance} fastify  Encapsulated Fastify Instance
- * @param {Object} options plugin options, refer to https://www.fastify.io/docs/latest/Reference/Plugins/#plugin-options
+ * @param {object} options plugin options, refer to https://www.fastify.io/docs/latest/Reference/Plugins/#plugin-options
  */
 export default async function knockoutRoutes(
   fastify: FastifyInstance,
-  options: Object
+  options: object
 ): Promise<void> {
   fastify.register(createKnockout);
   fastify.register(knockoutTournament);

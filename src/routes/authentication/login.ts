@@ -2,7 +2,7 @@ import { FastifyInstance } from "fastify/types/instance";
 import { hashCompare } from "../../utils/hashUtils";
 import { JsonSchemaToTsProvider } from "@fastify/type-provider-json-schema-to-ts";
 import { APP_ORIGIN } from "../../configs/setupConfig";
-import type { PoolClient, QueryResult } from "pg";
+import type { PoolClient } from "pg";
 
 const bodyJsonSchema = {
   type: "object",
@@ -26,11 +26,11 @@ const responseJsonSchema = {
 /**
  * A plugin that provide encapsulated routes
  * @param {FastifyInstance} fastify encapsulated fastify instance
- * @param {Object} options plugin options, refer to https://www.fastify.io/docs/latest/Reference/Plugins/#plugin-options
+ * @param {object} options plugin options, refer to https://www.fastify.io/docs/latest/Reference/Plugins/#plugin-options
  */
 export default async function login(
   fastify: FastifyInstance,
-  options: Object
+  options: object
 ): Promise<void> {
   const routeOptions = {
     schema: {

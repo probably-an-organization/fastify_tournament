@@ -33,11 +33,9 @@ export const createKnockoutMatches = async (
     '${stageNumber}'::SMALLINT
   )`;
 
-  let matches = [];
-  let currentStageNumber: number = 0;
-  let currentStageMatches: number = Math.ceil(
-    tournament.participants.length / 2
-  );
+  const matches = [];
+  let currentStageNumber = 0;
+  let currentStageMatches = Math.ceil(tournament.participants.length / 2);
   if (currentStageNumber === 0 && lineups) {
     const result = await client.query(
       `
