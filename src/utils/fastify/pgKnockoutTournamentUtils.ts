@@ -18,45 +18,98 @@ export const createKnockoutMatches = async (
       team: string;
     }[];
   },
-  client: PoolClient
+  client: PoolClient,
+  lineups?: [number, number][]
 ): Promise<object | undefined> => {
+  const getRowValue = (
+    p1Id: number | null,
+    p2Id: number | null,
+    matchNumber: number,
+    stageNumber: number
+  ) =>
+    `(
+    '${tournament._id}'::BIGINT,
+    ${p1Id ? `'${p1Id}'::BIGINT` : "NULL"},
+    ${p2Id ? `'${p2Id}'::BIGINT` : "NULL"},
+    '${matchNumber}'::SMALLINT,
+    '${stageNumber}'::SMALLINT
+  )`;
+
   var matches = [];
+  var currentStageNumber: number = 0;
   var currentStageMatches: number = Math.ceil(
     tournament.participants.length / 2
   );
-  var currentStageNumber: number = 0;
+  if (currentStageNumber === 0 && lineups) {
+    const result = await client.query(
+      `
+        INSERT INTO
+          knockout_tournament.matches (
+            tournament_id,
+            participant_1_id,
+            participant_2_id,
+            match_number,
+            stage_number
+          )
+        VALUES
+          ${lineups.map((l, i) =>
+            getRowValue(
+              tournament.participants[l[0]]._id ?? null,
+              tournament.participants[l[1]]._id ?? null,
+              i,
+              currentStageNumber
+            )
+          )}
+        RETURNING
+          id AS _id,
+          tournament_id,
+          participant_1_id,
+          participant_2_id,
+          match_number,
+          stage_number
+      `
+    );
+    matches.push(result.rows);
+    currentStageMatches /= 2;
+    currentStageNumber++;
+  }
   while (currentStageMatches >= 1) {
     const result = await client.query(
       `
           INSERT INTO
-            knockout_tournament.matches (tournament_id, participant_1_id, participant_2_id, match_number, stage_number)
+            knockout_tournament.matches (
+              tournament_id,
+              participant_1_id,
+              participant_2_id,
+              match_number,
+              stage_number
+            )
           VALUES
             ${Array.from({
               length: currentStageMatches,
-            }).map(
-              (_, i) => `(
-              '${tournament._id}'::BIGINT,
-              ${
-                currentStageNumber === 0 && tournament.participants[i * 2]
-                  ? `'${tournament.participants[i * 2]._id}'::BIGINT`
-                  : "NULL"
-              },
-              ${
-                currentStageNumber === 0 && tournament.participants[i * 2 + 1]
-                  ? `'${tournament.participants[i * 2 + 1]._id}'::BIGINT`
-                  : "NULL"
-              },
-              '${i}'::SMALLINT,
-              '${currentStageNumber}'::SMALLINT
-            )`
+            }).map((_, i) =>
+              getRowValue(
+                currentStageNumber === 0 && !lineups
+                  ? tournament.participants[i * 2]._id ?? null
+                  : null,
+                currentStageNumber === 0 && !lineups
+                  ? tournament.participants[i * 2 + 1]._id ?? null
+                  : null,
+                i,
+                currentStageNumber
+              )
             )}
           RETURNING
             id AS _id,
-            tournament_id
+            tournament_id,
+            participant_1_id,
+            participant_2_id,
+            match_number,
+            stage_number
         `
     );
     matches.push(result.rows);
-    currentStageMatches = currentStageMatches / 2;
+    currentStageMatches /= 2;
     currentStageNumber++;
   }
 

@@ -10,15 +10,9 @@ import type { PoolClient } from "pg";
  */
 export const verifyPermission = async (
   actionId: number,
-  request: any,
+  userId: number,
   client: PoolClient
 ): Promise<void> => {
-  // get token (from cookies), decode
-  const { _id } = await request.jwtVerify(request.cookies.token);
-  if (!_id) {
-    throw Error("No authentication token");
-  }
-
   const result = await client.query(
     `
       SELECT
@@ -38,7 +32,7 @@ export const verifyPermission = async (
       AND
         u.id = $2::BIGINT
     `,
-    [actionId, _id]
+    [actionId, userId]
   );
 
   if (result.rows[0].count < 1) {
