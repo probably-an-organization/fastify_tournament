@@ -54,7 +54,7 @@ fastify.register(fastifyJwt, {
 
 fastify.decorate("authenticate", async (request: any, reply: any) => {
   try {
-    await request.jwtVerify(request.cookies.token);
+    return await request.jwtVerify(request.cookies.token);
   } catch (err) {
     return reply.code(401).send(err);
   }

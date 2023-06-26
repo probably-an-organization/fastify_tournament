@@ -44,6 +44,7 @@ export default async function knockoutTournament(
             SELECT
               t.id as _id,
               t.name,
+              t.public,
               participants,
               matches
             FROM
@@ -81,11 +82,36 @@ export default async function knockoutTournament(
               WHERE
                 m.tournament_id = $1::BIGINT
             ) m ON true
+            WHERE
+              t.id = $1::BIGINT
           `,
               [id]
             );
-            release();
             if (result.rows.length > 0) {
+              const knockout = result.rows[0];
+              if (!knockout.public) {
+                const { _id } = await fastify.authenticate();
+                const tournamentUsersResult = await client.query(
+                  `
+                  SELECT
+                    *
+                  FROM
+                    knockout_tournament.tournaments_users
+                  WHERE
+                    tournament_id = $1::BIGINT
+                  AND
+                    user_id = $2::BIGINT
+                `,
+                  [id, _id]
+                );
+                release();
+                if (tournamentUsersResult.rows.length > 0) {
+                  return reply.code(200).send(result.rows[0]);
+                } else {
+                  return reply.code(400).send("No permission, not public");
+                }
+              }
+              release();
               return reply.code(200).send(result.rows[0]);
             } else {
               return reply.code(404).send("No knockout tournament found");
