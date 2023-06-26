@@ -1,12 +1,11 @@
 export const hasUniqueNumbers = (array: number[][]): boolean => {
-  let numbersString = "";
+  let previousNumbers: number[] = [];
   for (const numbers of array) {
     for (const number of numbers) {
-      const char = String(number);
-      if (numbersString.includes(char)) {
+      if (previousNumbers.some((n) => n === number)) {
         return false;
       }
-      numbersString += char;
+      previousNumbers.push(number);
     }
   }
   return true;
