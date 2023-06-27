@@ -5,6 +5,8 @@ import { createKnockoutMatches } from "../../../utils/fastify/pgKnockoutTourname
 import { verifyPermission } from "../../../utils/fastify/pgPermissionUtils";
 import { hasUniqueNumbers } from "../../../utils/arrayUtils";
 
+// TODO
+
 const bodyJsonSchema = {
   type: "object",
   additionalProperties: false,
@@ -34,6 +36,15 @@ const bodyJsonSchema = {
     },
   },
   required: ["name", "participants"],
+} as const;
+
+const paramsJsonSchema = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    id: { type: "string" },
+  },
+  required: ["id"],
 } as const;
 
 const responseJsonSchema = {
@@ -92,13 +103,14 @@ const responseJsonSchema = {
  * @param {FastifyInstance} fastify encapsulated fastify instance
  * @param {object} options plugin options, refer to https://www.fastify.io/docs/latest/Reference/Plugins/#plugin-options
  */
-export default async function createKnockoutV2(
+export default async function knockoutEditMatch(
   fastify: FastifyInstance,
   options: object
 ): Promise<void> {
   const routeOptions = {
     schema: {
       body: bodyJsonSchema,
+      params: paramsJsonSchema,
       response: responseJsonSchema,
     },
     onRequest: [fastify.authenticate], // fastify-jwt
@@ -106,7 +118,8 @@ export default async function createKnockoutV2(
 
   fastify
     .withTypeProvider<JsonSchemaToTsProvider>()
-    .post("/create-knockout", routeOptions, (request, reply): void => {
+    .post("/knockout-edit-match/:id", routeOptions, (request, reply): void => {
+      const { id } = request.params;
       const { lineups, name, participants } = request.body;
       const { _id } = request.user;
 
