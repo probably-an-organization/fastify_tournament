@@ -45,6 +45,8 @@ export default async function knockoutTournament(
                   t.id as _id,
                   t.name,
                   t.public,
+                  t.created,
+                  t.updated,
                   participants,
                   matches
                 FROM
