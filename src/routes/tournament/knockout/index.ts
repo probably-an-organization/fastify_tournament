@@ -2,6 +2,7 @@ import { FastifyInstance } from "fastify";
 
 import knockoutTournament from "./knockout-tournament";
 import knockoutCreate from "./knockout-create";
+import knockoutEditMatch from "./knockout-edit-match";
 
 /**
  * Encapsulates the routes
@@ -13,5 +14,6 @@ export default async function knockoutRoutes(
   options: object
 ): Promise<void> {
   fastify.register(knockoutCreate);
+  fastify.register(knockoutEditMatch);
   fastify.register(knockoutTournament);
 }

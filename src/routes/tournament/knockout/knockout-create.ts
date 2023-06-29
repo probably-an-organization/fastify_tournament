@@ -50,6 +50,7 @@ const responseJsonSchema = {
             _id: { type: "number" },
             name: { type: "string" },
             team: { type: "string" },
+            country: { type: "string" },
           },
         },
         required: ["_id", "name", "team"],
@@ -143,10 +144,13 @@ export default async function knockoutCreate(
                 ),
                 new_participants AS (
                   INSERT INTO
-                    knockout_tournament.participants (tournament_id, name, team)
+                    knockout_tournament.participants (tournament_id, name, team, country)
                   VALUES ${participants.map(
                     (p) =>
-                      `((SELECT id FROM new_tournament), '${p.name}'::VARCHAR, '${p.team}'::VARCHAR)`
+                      `((SELECT id FROM new_tournament),
+                      '${p.name}'::VARCHAR,
+                      '${p.team}'::VARCHAR,
+                      ${p.country ? `'${p.country}'::VARCHAR` : "NULL"})`
                   )}
                   RETURNING
                     id AS _id,
