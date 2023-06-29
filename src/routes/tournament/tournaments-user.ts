@@ -38,7 +38,7 @@ export default async function myTournaments(
 
   fastify
     .withTypeProvider<JsonSchemaToTsProvider>()
-    .get("/my-tournaments", routeOptions, (request, reply): void => {
+    .get("/tournaments-user", routeOptions, (request, reply): void => {
       const { _id } = request.user;
 
       fastify.pg.connect(
