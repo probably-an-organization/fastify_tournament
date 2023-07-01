@@ -114,7 +114,7 @@ export default async function signUp(
                 text: `Validate account: ${APP_ORIGIN}/user-verification?${token}`,
                 html: `<p>Validate account: ${APP_ORIGIN}/user-verification?${token}</p>`,
               });
-              return reply.code(200).send({ message: "Success" });
+              return reply.code(201).send({ message: "Success" });
             } else {
               return reply.code(400).send("Username or email already in use");
             }

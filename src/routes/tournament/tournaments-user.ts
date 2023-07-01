@@ -11,8 +11,10 @@ const responseJsonSchema = {
         _id: { type: "number" },
         name: { type: "string" },
         participants: { type: "number" },
+        created: { type: "string", format: "date-time" },
+        updated: { type: "string", format: "date-time" },
       },
-      required: ["_id", "name", "participants"],
+      required: ["_id", "name", "participants", "created", "updated"],
     },
   },
   400: {
@@ -54,6 +56,8 @@ export default async function myTournaments(
               SELECT
                 t.id as _id,
                 t.name,
+                t.created,
+                t.updated,
                 COUNT(p.tournament_id) AS participants
               FROM
                 knockout_tournament.tournaments AS t

@@ -4,6 +4,7 @@ import type { PoolClient } from "pg";
 import { createKnockoutMatches } from "../../../utils/fastify/pgKnockoutTournamentUtils";
 import { verifyPermission } from "../../../utils/fastify/pgPermissionUtils";
 import { hasUniqueNumbers } from "../../../utils/arrayUtils";
+import { formatISO9075 } from "date-fns";
 
 const bodyJsonSchema = {
   type: "object",
@@ -135,12 +136,17 @@ export default async function knockoutCreate(
               `
                 WITH new_tournament AS (
                   INSERT INTO
-                    knockout_tournament.tournaments (name)
-                  VALUES
-                    ('${name}'::VARCHAR)
+                    knockout_tournament.tournaments (name, created, updated)
+                  VALUES (
+                    '${name}'::VARCHAR,
+                    '${formatISO9075(Date.now())}'::TIMESTAMPTZ
+                    '${formatISO9075(Date.now())}'::TIMESTAMPTZ
+                  )
                   RETURNING
                     id,
-                    name
+                    name,
+                    created,
+                    updated
                 ),
                 new_participants AS (
                   INSERT INTO
@@ -187,7 +193,7 @@ export default async function knockoutCreate(
 
             release();
 
-            return reply.code(200).send({ ...tournament, matches });
+            return reply.code(201).send({ ...tournament, matches });
           } catch (err) {
             release();
             return reply.code(400).send(err as string);

@@ -1,9 +1,7 @@
 import { JsonSchemaToTsProvider } from "@fastify/type-provider-json-schema-to-ts";
 import { FastifyInstance } from "fastify/types/instance";
 import type { PoolClient } from "pg";
-import { createKnockoutMatches } from "../../../utils/fastify/pgKnockoutTournamentUtils";
 import { verifyPermission } from "../../../utils/fastify/pgPermissionUtils";
-import { hasUniqueNumbers } from "../../../utils/arrayUtils";
 
 // TODO
 
