@@ -1,6 +1,7 @@
 import { JsonSchemaToTsProvider } from "@fastify/type-provider-json-schema-to-ts";
 import { FastifyInstance } from "fastify/types/instance";
 import type { PoolClient } from "pg";
+import { verifyTournamentUserPermission } from "../../../utils/fastify/pgTournamentUserPermissionUtils";
 
 const paramsJsonSchema = {
   type: "object",
@@ -101,25 +102,10 @@ export default async function knockoutTournament(
             }
 
             const { _id } = await fastify.authenticate(request, reply);
-            const tournamentUsersResult = await client.query(
-              `
-                SELECT
-                  *
-                FROM
-                  knockout_tournament.tournaments_users
-                WHERE
-                  tournament_id = $1::BIGINT
-                AND
-                  user_id = $2::BIGINT
-              `,
-              [id, _id]
-            );
+            await verifyTournamentUserPermission(id, _id, client);
             release();
-            if (tournamentUsersResult.rows.length > 0) {
-              return reply.code(200).send(result.rows[0]);
-            } else {
-              return reply.code(400).send("No permission, not public");
-            }
+
+            return reply.code(200).send(result.rows[0]);
           } catch (err) {
             release();
             return reply.code(400).send(err as string);

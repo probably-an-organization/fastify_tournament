@@ -3,14 +3,12 @@ import type { PoolClient } from "pg";
 /**
  *
  * @param actionId the action's id within the authentication.action
- * @param request
- * @param reply
- * @param client
- * @param release
+ * @param userId the user's id
+ * @param client postgres pool client
  */
 export const verifyPermission = async (
-  actionId: number,
-  userId: number,
+  actionId: number | string,
+  userId: number | string,
   client: PoolClient
 ): Promise<void> => {
   const result = await client.query(
@@ -35,7 +33,7 @@ export const verifyPermission = async (
     [actionId, userId]
   );
 
-  if (result.rows[0].count < 1) {
+  if (result.rows.length !== 1) {
     throw Error("No permission");
   }
 };
