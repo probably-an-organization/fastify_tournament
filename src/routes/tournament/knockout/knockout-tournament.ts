@@ -79,6 +79,9 @@ export default async function knockoutTournament(
                         'match_number', m.match_number,
                         'stage_number', m.stage_number
                       )
+                      ORDER BY
+                      stage_number ASC,
+                      match_number ASC
                     ) AS matches
                   FROM
                     knockout_tournament.matches AS m

@@ -2,6 +2,7 @@ import { JsonSchemaToTsProvider } from "@fastify/type-provider-json-schema-to-ts
 import { FastifyInstance } from "fastify/types/instance";
 import type { PoolClient } from "pg";
 import { verifyTournamentUserPermission } from "../../../utils/fastify/pgTournamentUserPermissionUtils";
+import { isEven } from "../../../utils/mathUtils";
 
 // TODO
 
@@ -91,10 +92,10 @@ export default async function knockoutEditMatch(
           }
 
           try {
-            const tournamentResult = await client.query(
+            const matchResult = await client.query(
               `
                 SELECT
-                  m.tournament_id
+                  *
                 FROM
                   knockout_tournament.matches AS m
                 RIGHT JOIN
@@ -109,12 +110,16 @@ export default async function knockoutEditMatch(
               [id, _id]
             );
 
-            if (tournamentResult.rows.length !== 1) {
+            if (matchResult.rows.length !== 1) {
               throw Error("No tournament found");
             }
 
-            const tournamentId = tournamentResult.rows[0].tournament_id;
-            await verifyTournamentUserPermission(tournamentId, _id, client);
+            const match = matchResult.rows[0];
+            await verifyTournamentUserPermission(
+              match.tournament_id,
+              _id,
+              client
+            );
 
             const updates = [];
             if (status) {
@@ -135,10 +140,8 @@ export default async function knockoutEditMatch(
               updates.push(`winner = '${winner}'::CHAR`);
             }
 
-            console.log("QUERY", updates.join(","));
-
             // TODO if winner is selected, next match should have the winner as participant_X_id
-            const result = await client.query(
+            const updateMatchResult = await client.query(
               `
               UPDATE
                 knockout_tournament.matches
@@ -153,13 +156,65 @@ export default async function knockoutEditMatch(
               [id]
             );
 
-            console.log("OAKWDKOAWD", result);
+            // set next match (TODO, recursively check, e.g. if match has been completed but first stage needs some changes)
+            if (winner !== 0) {
+              console.log(
+                match.tournament_id,
+                Number(match.stage_number) + 1,
+                Math.floor(Number(match.match_number / 2))
+              );
+              const nextMatchResult = await client.query(
+                `
+                SELECT
+                  *
+                FROM
+                  knockout_tournament.matches
+                WHERE
+                  tournament_id = $1::BIGINT
+                AND
+                  stage_number = $2::SMALLINT
+                AND
+                  match_number = $3::SMALLINT
+              `,
+                [
+                  match.tournament_id,
+                  Number(match.stage_number) + 1,
+                  Math.floor(Number(match.match_number / 2)),
+                ]
+              );
+              if (nextMatchResult.rows.length === 1) {
+                const nextMatch = nextMatchResult.rows[0];
+                await client.query(
+                  `
+                  UPDATE
+                    knockout_tournament.matches
+                  SET
+                    ${
+                      isEven(Number(match.match_number))
+                        ? "participant_1_id"
+                        : "participant_2_id"
+                    } = $1::BIGINT
+                  WHERE
+                    id = $2::BIGINT
+                  RETURNING
+                    id as _id,
+                    *
+                `,
+                  [
+                    winner === 1
+                      ? match.participant_1_id
+                      : match.participant_2_id,
+                    nextMatch.id,
+                  ]
+                );
+              }
+            }
 
             release();
-            if (result.rows.length < 1) {
+            if (updateMatchResult.rows.length < 1) {
               return reply.code(400).send("Error????");
             }
-            return reply.code(200).send(result.rows[0]);
+            return reply.code(200).send(updateMatchResult.rows[0]);
           } catch (err) {
             release();
             return reply.code(400).send(err as string);
