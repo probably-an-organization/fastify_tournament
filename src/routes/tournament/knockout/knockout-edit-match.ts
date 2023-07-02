@@ -157,6 +157,8 @@ export default async function knockoutEditMatch(
             );
 
             // set next match (TODO, recursively check, e.g. if match has been completed but first stage needs some changes)
+            // suggestion -> while (THERE IS A NEXT STAGE && ACCORDING MATCH) do (change participant slot depending on winner)
+
             if (winner !== 0) {
               console.log(
                 match.tournament_id,
