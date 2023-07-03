@@ -29,29 +29,32 @@ const paramsJsonSchema = {
 
 const responseJsonSchema = {
   200: {
-    type: "object",
-    properties: {
-      _id: { type: "number" },
-      status: { type: "string", enum: ["future", "past", "live"] },
-      date: { type: "string" },
-      participant_1_id: { type: "number" },
-      participant_2_id: { type: "number" },
-      winner: { type: "number", enum: [0, 1, 2] },
-      tournament_id: { type: "number" },
-      match_number: { type: "number" },
-      stage_number: { type: "number" },
+    type: "array",
+    items: {
+      type: "object",
+      properties: {
+        _id: { type: "number" },
+        status: { type: "string", enum: ["future", "past", "live"] },
+        date: { type: "string" },
+        participant_1_id: { type: "number" },
+        participant_2_id: { type: "number" },
+        winner: { type: "number", enum: [0, 1, 2] },
+        tournament_id: { type: "number" },
+        match_number: { type: "number" },
+        stage_number: { type: "number" },
+      },
+      required: [
+        "_id",
+        "status",
+        "date",
+        "participant_1_id",
+        "participant_2_id",
+        "winner",
+        "tournament_id",
+        "match_number",
+        "stage_number",
+      ],
     },
-    required: [
-      "_id",
-      "status",
-      "date",
-      "participant_1_id",
-      "participant_2_id",
-      "winner",
-      "tournament_id",
-      "match_number",
-      "stage_number",
-    ],
   },
   400: {
     type: "string",
@@ -114,9 +117,9 @@ export default async function knockoutEditMatch(
               throw Error("No tournament found");
             }
 
-            const match = matchResult.rows[0];
+            let currentMatch = matchResult.rows[0];
             await verifyTournamentUserPermission(
-              match.tournament_id,
+              currentMatch.tournament_id,
               _id,
               client
             );
@@ -156,21 +159,20 @@ export default async function knockoutEditMatch(
               [id]
             );
 
+            const returnPayload = [updateMatchResult.rows[0]];
             // set next match (TODO, recursively check, e.g. if match has been completed but first stage needs some changes)
             // suggestion -> while (THERE IS A NEXT STAGE && ACCORDING MATCH) do (change participant slot depending on winner)
 
-            if (winner !== 0) {
-              console.log(
-                match.tournament_id,
-                Number(match.stage_number) + 1,
-                Math.floor(Number(match.match_number / 2))
-              );
+            let currentMatchWinner = Number(updateMatchResult.rows[0].winner);
+
+            while (!!currentMatch && currentMatchWinner !== 0) {
               const nextMatchResult = await client.query(
                 `
                 SELECT
+                  m.id as _id,
                   *
                 FROM
-                  knockout_tournament.matches
+                  knockout_tournament.matches AS m
                 WHERE
                   tournament_id = $1::BIGINT
                 AND
@@ -179,20 +181,24 @@ export default async function knockoutEditMatch(
                   match_number = $3::SMALLINT
               `,
                 [
-                  match.tournament_id,
-                  Number(match.stage_number) + 1,
-                  Math.floor(Number(match.match_number / 2)),
+                  currentMatch.tournament_id,
+                  Number(currentMatch.stage_number) + 1,
+                  Math.floor(Number(currentMatch.match_number / 2)),
                 ]
               );
-              if (nextMatchResult.rows.length === 1) {
-                const nextMatch = nextMatchResult.rows[0];
-                await client.query(
-                  `
+
+              if (nextMatchResult.rows.length !== 1) {
+                break;
+              }
+
+              const nextMatch = nextMatchResult.rows[0];
+              const updateNextMatchResult = await client.query(
+                `
                   UPDATE
                     knockout_tournament.matches
                   SET
                     ${
-                      isEven(Number(match.match_number))
+                      isEven(Number(currentMatch.match_number))
                         ? "participant_1_id"
                         : "participant_2_id"
                     } = $1::BIGINT
@@ -202,21 +208,25 @@ export default async function knockoutEditMatch(
                     id as _id,
                     *
                 `,
-                  [
-                    winner === 1
-                      ? match.participant_1_id
-                      : match.participant_2_id,
-                    nextMatch.id,
-                  ]
-                );
-              }
+                [
+                  currentMatchWinner === 1
+                    ? currentMatch.participant_1_id
+                    : currentMatch.participant_2_id,
+                  nextMatch._id,
+                ]
+              );
+
+              const updateNextMatch = updateNextMatchResult.rows[0];
+              returnPayload.push(updateNextMatch);
+              currentMatch = updateNextMatch;
+              currentMatchWinner = Number(updateNextMatch.winner);
             }
 
             release();
             if (updateMatchResult.rows.length < 1) {
               return reply.code(400).send("Error????");
             }
-            return reply.code(200).send(updateMatchResult.rows[0]);
+            return reply.code(200).send(returnPayload);
           } catch (err) {
             release();
             return reply.code(400).send(err as string);
