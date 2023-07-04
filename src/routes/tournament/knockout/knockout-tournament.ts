@@ -58,7 +58,8 @@ export default async function knockoutTournament(
                       json_build_object(
                         '_id', p.id,
                         'name', p.name,
-                        'team', p.team
+                        'team', p.team,
+                        'country_id', p.country_id
                       )
                     ) AS participants
                   FROM

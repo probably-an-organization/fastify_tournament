@@ -123,6 +123,8 @@ export default async function knockoutCreate(
         }
       }
 
+      console.log("AYYOOO", name, participants, lineups);
+
       fastify.pg.connect(
         async (err: Error, client: PoolClient, release: any) => {
           if (err) {
@@ -139,21 +141,21 @@ export default async function knockoutCreate(
                     knockout_tournament.tournaments (name, created, updated)
                   VALUES (
                     '${name}'::VARCHAR,
-                    '${formatISO9075(Date.now())}'::TIMESTAMPTZ
+                    '${formatISO9075(Date.now())}'::TIMESTAMPTZ,
                     '${formatISO9075(Date.now())}'::TIMESTAMPTZ
                   )
                   RETURNING
-                    id,
+                    id AS _id,
                     name,
                     created,
                     updated
                 ),
                 new_participants AS (
                   INSERT INTO
-                    knockout_tournament.participants (tournament_id, name, team, country)
+                    knockout_tournament.participants (tournament_id, name, team, country_id)
                   VALUES ${participants.map(
                     (p) =>
-                      `((SELECT id FROM new_tournament),
+                      `((SELECT _id FROM new_tournament),
                       '${p.name}'::VARCHAR,
                       '${p.team}'::VARCHAR,
                       ${p.country ? `'${p.country}'::VARCHAR` : "NULL"})`
@@ -161,26 +163,27 @@ export default async function knockoutCreate(
                   RETURNING
                     id AS _id,
                     name,
-                    team
+                    team,
+                    country_id
                 ),
                 new_tournaments_users AS (
                   INSERT INTO
                     knockout_tournament.tournaments_users (tournament_id, user_id)
                   VALUES
-                    ((SELECT id FROM new_tournament), '${_id}'::BIGINT)
+                    ((SELECT _id FROM new_tournament), '${_id}'::BIGINT)
                   RETURNING
                     tournament_id,
                     user_id
                 )
                 SELECT
-                    t.id AS _id,
+                    t._id AS _id,
                     t.name AS name,
                     jsonb_agg(p) AS participants
                 FROM
                   new_tournament as t,
                   new_participants as p
                 GROUP BY
-                  t.id,
+                  t._id,
                   t.name
               `
             );
