@@ -62,7 +62,7 @@ fastify.decorate("authenticate", async (request: any, reply: any) => {
 });
 
 // used for manual retrieval of user token (within a call)
-fastify.decorate("decodeUserToken", async (request: any, reply: any) => {
+fastify.decorate("decodeUserToken", async (request: any) => {
   try {
     return await request.jwtVerify(request.cookies.token);
   } catch (err) {

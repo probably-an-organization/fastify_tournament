@@ -23,13 +23,20 @@ export default async function loginVerification(
     schema: {
       response: responseJsonSchema,
     },
-    onRequest: [fastify.authenticate],
   };
 
   fastify
     .withTypeProvider<JsonSchemaToTsProvider>()
-    .get("/login-verification", routeOptions, (request, reply): void => {
-      // TODO use fastify.decodeUserToken here instead of fastify.authenticate above
-      reply.code(200).send("Success");
-    });
+    .get(
+      "/login-verification",
+      routeOptions,
+      async (request, reply): Promise<void> => {
+        try {
+          const { _id } = await fastify.decodeUserToken(request);
+          return reply.code(200).send("Success");
+        } catch (err) {
+          return reply.code(401).send("Not authenticated");
+        }
+      }
+    );
 }

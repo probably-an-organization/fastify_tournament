@@ -163,7 +163,7 @@ export default async function knockoutTournament(
           }
 
           try {
-            const { _id } = await fastify.decodeUserToken(request, reply);
+            const { _id } = await fastify.decodeUserToken(request);
             editPermission = await verifyTournamentUserPermission(
               id,
               _id,
