@@ -29,6 +29,7 @@ export default async function loginVerification(
   fastify
     .withTypeProvider<JsonSchemaToTsProvider>()
     .get("/login-verification", routeOptions, (request, reply): void => {
+      // TODO use fastify.decodeUserToken here instead of fastify.authenticate above
       reply.code(200).send("Success");
     });
 }
