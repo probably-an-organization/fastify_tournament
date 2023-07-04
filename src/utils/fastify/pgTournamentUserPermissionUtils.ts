@@ -5,12 +5,13 @@ import type { PoolClient } from "pg";
  * @param tournamentId the tournament's id
  * @param userId the user's id
  * @param client postgres pool client
+ * @returns {boolean} true if verified
  */
 export const verifyTournamentUserPermission = async (
   tournamentId: number | string,
   userId: number | string,
   client: PoolClient
-): Promise<void> => {
+): Promise<boolean> => {
   const result = await client.query(
     `
     SELECT
@@ -25,9 +26,5 @@ export const verifyTournamentUserPermission = async (
     [tournamentId, userId]
   );
 
-  console.log("Permission", tournamentId, userId, result.rows);
-
-  if (result.rows.length !== 1) {
-    throw Error("No permission");
-  }
+  return result.rows.length === 1;
 };

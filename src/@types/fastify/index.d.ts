@@ -7,5 +7,6 @@ declare module "fastify" {
     HttpResponse = ServerResponse
   > {
     authenticate;
+    decodeUserToken;
   }
 }

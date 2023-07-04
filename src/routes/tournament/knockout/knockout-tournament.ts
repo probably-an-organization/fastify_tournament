@@ -2,6 +2,7 @@ import { JsonSchemaToTsProvider } from "@fastify/type-provider-json-schema-to-ts
 import { FastifyInstance } from "fastify/types/instance";
 import type { PoolClient } from "pg";
 import { verifyTournamentUserPermission } from "../../../utils/fastify/pgTournamentUserPermissionUtils";
+import { APP_ORIGIN } from "../../../configs/setupConfig";
 
 const paramsJsonSchema = {
   type: "object",
@@ -10,6 +11,58 @@ const paramsJsonSchema = {
     id: { type: "string" },
   },
   required: ["id"],
+} as const;
+
+const responseJsonSchema = {
+  200: {
+    type: "object",
+    additionalProperties: false,
+    properties: {
+      editPermission: { type: "boolean" },
+      tournament: {
+        type: "object",
+        properties: {
+          _id: { type: "number" },
+          name: { type: "string" },
+          public: { type: "boolean" },
+          created: { type: "string", format: "date-time" },
+          updated: { type: "string", format: "date-time" },
+          participants: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                _id: { type: "number" },
+                name: { type: "string" },
+                team: { type: "string" },
+                country_id: { type: "string" },
+              },
+            },
+          },
+          matches: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                _id: { type: "number" },
+                date: { type: "string", format: "date-time" },
+                information: { type: "string" },
+                match_number: { type: "number" },
+                participant_1_id: { type: "number" },
+                participant_2_id: { type: "number" },
+                stage_number: { type: "number" },
+                status: { type: "string" },
+                winner: { type: "number" },
+              },
+            },
+          },
+        },
+      },
+    },
+    required: ["editPermission", "tournament"],
+  },
+  400: { type: "string" },
+  404: { type: "string" },
 } as const;
 
 /**
@@ -24,6 +77,7 @@ export default async function knockoutTournament(
   const routeOptions = {
     schema: {
       params: paramsJsonSchema,
+      response: responseJsonSchema,
     },
   };
 
@@ -39,8 +93,11 @@ export default async function knockoutTournament(
             return reply.code(400).send(err.message);
           }
 
+          let tournament;
+          let editPermission = false;
+
           try {
-            const result = await client.query(
+            const knockoutResult = await client.query(
               `
                 SELECT
                   t.id as _id,
@@ -95,25 +152,36 @@ export default async function knockoutTournament(
               `,
               [id]
             );
-            if (result.rows.length < 1) {
+            if (knockoutResult.rows.length < 1) {
               release();
               return reply.code(404).send("No knockout tournament found");
             }
-
-            const knockout = result.rows[0];
-            if (knockout.public) {
-              release();
-              return reply.code(200).send(result.rows[0]);
-            }
-
-            const { _id } = await fastify.authenticate(request, reply);
-            await verifyTournamentUserPermission(id, _id, client);
-            release();
-
-            return reply.code(200).send(result.rows[0]);
+            tournament = knockoutResult.rows[0];
           } catch (err) {
             release();
             return reply.code(400).send(err as string);
+          }
+
+          try {
+            const { _id } = await fastify.decodeUserToken(request, reply);
+            editPermission = await verifyTournamentUserPermission(
+              id,
+              _id,
+              client
+            );
+            release();
+            if (editPermission) {
+              return reply.code(200).send({ editPermission, tournament });
+            } else {
+              throw Error("No permission");
+            }
+          } catch (err) {
+            release();
+            if (tournament.public) {
+              return reply.code(200).send({ editPermission, tournament });
+            } else {
+              return reply.code(401).send("No permission");
+            }
           }
         }
       );

@@ -52,11 +52,21 @@ fastify.register(fastifyJwt, {
   // },
 });
 
+// used for onRequest (making a valid jwt a requirement for the request)
 fastify.decorate("authenticate", async (request: any, reply: any) => {
   try {
     return await request.jwtVerify(request.cookies.token);
   } catch (err) {
     return reply.code(401).send(err);
+  }
+});
+
+// used for manual retrieval of user token (within a call)
+fastify.decorate("decodeUserToken", async (request: any, reply: any) => {
+  try {
+    return await request.jwtVerify(request.cookies.token);
+  } catch (err) {
+    throw Error(err as string);
   }
 });
 
