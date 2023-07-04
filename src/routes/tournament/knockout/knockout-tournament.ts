@@ -72,13 +72,14 @@ export default async function knockoutTournament(
                     json_agg(
                       json_build_object(
                         '_id', m.id,
-                        'status', m.status,
                         'date', m.date,
+                        'information', m.information,
+                        'match_number', m.match_number,
                         'participant_1_id', m.participant_1_id,
                         'participant_2_id', m.participant_2_id,
-                        'winner', m.winner,
-                        'match_number', m.match_number,
-                        'stage_number', m.stage_number
+                        'stage_number', m.stage_number,
+                        'status', m.status,
+                        'winner', m.winner
                       )
                       ORDER BY
                       stage_number ASC,

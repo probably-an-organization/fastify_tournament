@@ -10,10 +10,11 @@ const bodyJsonSchema = {
   type: "object",
   additionalProperties: false,
   properties: {
-    status: { type: "string", enum: ["future", "past", "live"] },
     date: { type: "string" },
+    information: { type: "string" },
     participant_1_id: { type: "number" },
     participant_2_id: { type: "number" },
+    status: { type: "string", enum: ["future", "past", "live"] },
     winner: { type: "number", enum: [0, 1, 2] },
   },
 } as const;
@@ -34,14 +35,15 @@ const responseJsonSchema = {
       type: "object",
       properties: {
         _id: { type: "number" },
-        status: { type: "string", enum: ["future", "past", "live"] },
         date: { type: "string" },
+        information: { type: "string" },
+        match_number: { type: "number" },
         participant_1_id: { type: "number" },
         participant_2_id: { type: "number" },
-        winner: { type: "number", enum: [0, 1, 2] },
-        tournament_id: { type: "number" },
-        match_number: { type: "number" },
         stage_number: { type: "number" },
+        status: { type: "string", enum: ["future", "past", "live"] },
+        tournament_id: { type: "number" },
+        winner: { type: "number", enum: [0, 1, 2] },
       },
       required: [
         "_id",
@@ -83,8 +85,14 @@ export default async function knockoutEditMatch(
     .withTypeProvider<JsonSchemaToTsProvider>()
     .put("/knockout-edit-match/:id", routeOptions, (request, reply): void => {
       const { id } = request.params;
-      const { status, date, participant_1_id, participant_2_id, winner } =
-        request.body;
+      const {
+        date,
+        information,
+        participant_1_id,
+        participant_2_id,
+        status,
+        winner,
+      } = request.body;
       const { _id } = request.user;
 
       fastify.pg.connect(
@@ -125,13 +133,11 @@ export default async function knockoutEditMatch(
             );
 
             const updates = [];
-            if (status) {
-              updates.push(
-                `status = '${status}'::knockout_tournament.match_status_types`
-              );
-            }
             if (date) {
               updates.push(`date = '${date}'::TIMESTAMPTZ`);
+            }
+            if (information) {
+              updates.push(`information = '${information}'::VARCHAR`);
             }
             if (participant_1_id) {
               updates.push(`participant_1_id = '${participant_1_id}'::BIGINT`);
@@ -139,11 +145,15 @@ export default async function knockoutEditMatch(
             if (participant_2_id) {
               updates.push(`participant_2_id = '${participant_2_id}'::BIGINT`);
             }
+            if (status) {
+              updates.push(
+                `status = '${status}'::knockout_tournament.match_status_types`
+              );
+            }
             if (winner) {
               updates.push(`winner = '${winner}'::CHAR`);
             }
 
-            // TODO if winner is selected, next match should have the winner as participant_X_id
             const updateMatchResult = await client.query(
               `
               UPDATE
@@ -160,11 +170,10 @@ export default async function knockoutEditMatch(
             );
 
             const returnPayload = [updateMatchResult.rows[0]];
-            // set next match (TODO, recursively check, e.g. if match has been completed but first stage needs some changes)
-            // suggestion -> while (THERE IS A NEXT STAGE && ACCORDING MATCH) do (change participant slot depending on winner)
 
             let currentMatchWinner = Number(updateMatchResult.rows[0].winner);
 
+            // recursively change next stage matches affected by current stage change
             while (!!currentMatch && currentMatchWinner !== 0) {
               const nextMatchResult = await client.query(
                 `
