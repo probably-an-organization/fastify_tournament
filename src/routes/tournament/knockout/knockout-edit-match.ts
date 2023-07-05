@@ -150,7 +150,7 @@ export default async function knockoutEditMatch(
                 `status = '${status}'::knockout_tournament.match_status_types`
               );
             }
-            if (winner) {
+            if (winner !== undefined) {
               updates.push(`winner = '${winner}'::CHAR`);
             }
 
@@ -174,7 +174,7 @@ export default async function knockoutEditMatch(
             let currentMatchWinner = Number(updateMatchResult.rows[0].winner);
 
             // recursively change next stage matches affected by current stage change
-            while (!!currentMatch && currentMatchWinner !== 0) {
+            while (!!currentMatch) {
               const nextMatchResult = await client.query(
                 `
                 SELECT
@@ -210,7 +210,9 @@ export default async function knockoutEditMatch(
                       isEven(Number(currentMatch.match_number))
                         ? "participant_1_id"
                         : "participant_2_id"
-                    } = $1::BIGINT
+                    } = $1::BIGINT ${
+                  currentMatchWinner === 0 ? ", winner = '0'::CHAR" : ""
+                }
                   WHERE
                     id = $2::BIGINT
                   RETURNING
@@ -218,7 +220,9 @@ export default async function knockoutEditMatch(
                     *
                 `,
                 [
-                  currentMatchWinner === 1
+                  currentMatchWinner === 0
+                    ? null
+                    : currentMatchWinner === 1
                     ? currentMatch.participant_1_id
                     : currentMatch.participant_2_id,
                   nextMatch._id,
