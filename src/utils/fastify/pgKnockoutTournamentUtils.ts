@@ -9,12 +9,16 @@ import type { PoolClient } from "pg";
 export const createKnockoutMatches = async (
   tournament: {
     _id: number;
+    created: string;
     name: string;
     participants: {
       _id: number;
+      created: string;
       name: string;
       team: string;
+      updated: string;
     }[];
+    updated: string;
   },
   client: PoolClient,
   lineups?: [number, number][]
@@ -58,11 +62,7 @@ export const createKnockoutMatches = async (
           )}
         RETURNING
           id AS _id,
-          tournament_id,
-          participant_1_id,
-          participant_2_id,
-          match_number,
-          stage_number
+          *
       `
     );
     matches.push(result.rows);
@@ -97,11 +97,7 @@ export const createKnockoutMatches = async (
             )}
           RETURNING
             id AS _id,
-            tournament_id,
-            participant_1_id,
-            participant_2_id,
-            match_number,
-            stage_number
+            *
         `
     );
     matches.push(result.rows);

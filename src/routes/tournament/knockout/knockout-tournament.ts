@@ -2,7 +2,6 @@ import { JsonSchemaToTsProvider } from "@fastify/type-provider-json-schema-to-ts
 import { FastifyInstance } from "fastify/types/instance";
 import type { PoolClient } from "pg";
 import { verifyTournamentUserPermission } from "../../../utils/fastify/pgTournamentUserPermissionUtils";
-import { APP_ORIGIN } from "../../../configs/setupConfig";
 
 const paramsJsonSchema = {
   type: "object",
@@ -23,40 +22,74 @@ const responseJsonSchema = {
         type: "object",
         properties: {
           _id: { type: "number" },
+          created: { type: "string" },
           name: { type: "string" },
-          public: { type: "boolean" },
-          created: { type: "string", format: "date-time" },
-          updated: { type: "string", format: "date-time" },
-          participants: {
-            type: "array",
-            items: {
-              type: "object",
-              properties: {
-                _id: { type: "number" },
-                name: { type: "string" },
-                team: { type: "string" },
-                country_id: { type: "string" },
-              },
-            },
-          },
           matches: {
             type: "array",
             items: {
               type: "object",
               properties: {
                 _id: { type: "number" },
-                date: { type: "string", format: "date-time" },
+                created: { type: "string" },
+                date: { type: "string" },
                 information: { type: "string" },
                 match_number: { type: "number" },
                 participant_1_id: { type: "number" },
                 participant_2_id: { type: "number" },
                 stage_number: { type: "number" },
                 status: { type: "string" },
+                updated: { type: "string" },
                 winner: { type: "number" },
               },
+              required: [
+                "_id",
+                "created",
+                "date",
+                "information",
+                "match_number",
+                "participant_1_id",
+                "participant_2_id",
+                "stage_number",
+                "status",
+                "updated",
+                "winner",
+              ],
             },
           },
+          participants: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                _id: { type: "number" },
+                country_id: { type: "string" },
+                created: { type: "string" },
+                name: { type: "string" },
+                team: { type: "string" },
+                updated: { type: "string" },
+              },
+              required: [
+                "_id",
+                "country_id",
+                "created",
+                "name",
+                "team",
+                "updated",
+              ],
+            },
+          },
+          public: { type: "boolean" },
+          updated: { type: "string" },
         },
+        required: [
+          "_id",
+          "created",
+          "matches",
+          "name",
+          "public",
+          "participants",
+          "updated",
+        ],
       },
     },
     required: ["editPermission", "tournament"],
@@ -100,55 +133,12 @@ export default async function knockoutTournament(
             const knockoutResult = await client.query(
               `
                 SELECT
-                  t.id as _id,
-                  t.name,
-                  t.public,
-                  t.created,
-                  t.updated,
-                  participants,
-                  matches
+                  id as _id,
+                  *
                 FROM
-                  knockout_tournament.tournaments AS t
-                LEFT JOIN LATERAL (
-                  SELECT
-                    json_agg(
-                      json_build_object(
-                        '_id', p.id,
-                        'name', p.name,
-                        'team', p.team,
-                        'country_id', p.country_id
-                      )
-                    ) AS participants
-                  FROM
-                    knockout_tournament.participants AS p
-                  WHERE
-                    p.tournament_id = $1::BIGINT
-                ) p ON true
-                LEFT JOIN LATERAL (
-                  SELECT
-                    json_agg(
-                      json_build_object(
-                        '_id', m.id,
-                        'date', m.date,
-                        'information', m.information,
-                        'match_number', m.match_number,
-                        'participant_1_id', m.participant_1_id,
-                        'participant_2_id', m.participant_2_id,
-                        'stage_number', m.stage_number,
-                        'status', m.status,
-                        'winner', m.winner
-                      )
-                      ORDER BY
-                      stage_number ASC,
-                      match_number ASC
-                    ) AS matches
-                  FROM
-                    knockout_tournament.matches AS m
-                  WHERE
-                    m.tournament_id = $1::BIGINT
-                ) m ON true
+                  knockout_tournament.tournaments
                 WHERE
-                  t.id = $1::BIGINT
+                  id = $1::BIGINT
               `,
               [id]
             );
@@ -156,7 +146,51 @@ export default async function knockoutTournament(
               release();
               return reply.code(404).send("No knockout tournament found");
             }
+
             tournament = knockoutResult.rows[0];
+
+            const knockoutMatchesResult = await client.query(
+              `
+                SELECT
+                  id as _id,
+                  *
+                FROM
+                  knockout_tournament.matches
+                WHERE
+                  tournament_id = $1::BIGINT
+              `,
+              [tournament._id]
+            );
+            if (knockoutMatchesResult.rows.length < 1) {
+              release();
+              return reply
+                .code(404)
+                .send("No knockout tournament matches found");
+            }
+
+            tournament.matches = knockoutMatchesResult.rows;
+
+            const knockoutParticipantsResult = await client.query(
+              `
+                SELECT
+                  id as _id,
+                  *
+                FROM
+                  knockout_tournament.participants
+                WHERE
+                  tournament_id = $1::BIGINT
+              `,
+              [tournament._id]
+            );
+
+            if (knockoutParticipantsResult.rows.length < 1) {
+              release();
+              return reply
+                .code(404)
+                .send("No knockout tournament participants found");
+            }
+
+            tournament.participants = knockoutParticipantsResult.rows;
           } catch (err) {
             release();
             return reply.code(400).send(err as string);

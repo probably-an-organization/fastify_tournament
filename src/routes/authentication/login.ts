@@ -85,7 +85,7 @@ export default async function login(
                   _id: userData._id,
                 },
                 {
-                  expiresIn: "30min",
+                  expiresIn: "1h",
                 }
               );
 

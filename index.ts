@@ -9,6 +9,7 @@ import fastifyPostgres from "@fastify/postgres";
 import fastifyJwt from "@fastify/jwt";
 import fastifyCookie from "@fastify/cookie";
 import fastifyCors from "@fastify/cors";
+
 import { JWT_SECRET, APP_ORIGIN } from "./src/configs/setupConfig";
 import {
   FASTIFY_CONFIG,

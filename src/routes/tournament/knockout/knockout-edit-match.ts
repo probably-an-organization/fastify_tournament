@@ -4,19 +4,20 @@ import type { PoolClient } from "pg";
 import { verifyTournamentUserPermission } from "../../../utils/fastify/pgTournamentUserPermissionUtils";
 import { isEven } from "../../../utils/mathUtils";
 
-// TODO
-
 const bodyJsonSchema = {
   type: "object",
   additionalProperties: false,
   properties: {
+    created: { type: "string" },
     date: { type: "string" },
     information: { type: "string" },
     participant_1_id: { type: "number" },
     participant_2_id: { type: "number" },
     status: { type: "string", enum: ["future", "past", "live"] },
+    updated: { type: "string" },
     winner: { type: "number", enum: [0, 1, 2] },
   },
+  required: ["created", "updated"],
 } as const;
 
 const paramsJsonSchema = {
@@ -35,6 +36,7 @@ const responseJsonSchema = {
       type: "object",
       properties: {
         _id: { type: "number" },
+        created: { type: "string" },
         date: { type: "string" },
         information: { type: "string" },
         match_number: { type: "number" },
@@ -43,18 +45,21 @@ const responseJsonSchema = {
         stage_number: { type: "number" },
         status: { type: "string", enum: ["future", "past", "live"] },
         tournament_id: { type: "number" },
+        updated: { type: "string" },
         winner: { type: "number", enum: [0, 1, 2] },
       },
       required: [
         "_id",
-        "status",
+        "created",
         "date",
+        "match_number",
         "participant_1_id",
         "participant_2_id",
-        "winner",
-        "tournament_id",
-        "match_number",
         "stage_number",
+        "status",
+        "tournament_id",
+        "updated",
+        "winner",
       ],
     },
   },
@@ -86,11 +91,13 @@ export default async function knockoutEditMatch(
     .put("/knockout-edit-match/:id", routeOptions, (request, reply): void => {
       const { id } = request.params;
       const {
+        created,
         date,
         information,
         participant_1_id,
         participant_2_id,
         status,
+        updated,
         winner,
       } = request.body;
       const { _id } = request.user;
@@ -122,7 +129,7 @@ export default async function knockoutEditMatch(
             );
 
             if (matchResult.rows.length !== 1) {
-              throw Error("No tournament found");
+              throw Error("No match found");
             }
 
             let currentMatch = matchResult.rows[0];
@@ -162,11 +169,15 @@ export default async function knockoutEditMatch(
                 ${updates.join(",")}
               WHERE
                 id = $1::BIGINT
+              AND
+                created = $2::TIMESTAMPTZ
+              AND
+                updated = $3::TIMESTAMPTZ
               RETURNING
                 id as _id,
                 *
             `,
-              [id]
+              [id, created, updated]
             );
 
             const returnPayload = [updateMatchResult.rows[0]];
@@ -221,7 +232,7 @@ export default async function knockoutEditMatch(
                 `,
                 [
                   currentMatchWinner === 0
-                    ? null
+                    ? undefined
                     : currentMatchWinner === 1
                     ? currentMatch.participant_1_id
                     : currentMatch.participant_2_id,

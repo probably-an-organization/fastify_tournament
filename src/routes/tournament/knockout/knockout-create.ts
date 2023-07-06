@@ -4,12 +4,22 @@ import type { PoolClient } from "pg";
 import { createKnockoutMatches } from "../../../utils/fastify/pgKnockoutTournamentUtils";
 import { verifyPermission } from "../../../utils/fastify/pgPermissionUtils";
 import { hasUniqueNumbers } from "../../../utils/arrayUtils";
-import { formatISO9075 } from "date-fns";
 
 const bodyJsonSchema = {
   type: "object",
   additionalProperties: false,
   properties: {
+    lineups: {
+      type: "array",
+      items: {
+        type: "array",
+        maxItems: 2,
+        minItems: 2,
+        items: {
+          type: "number",
+        },
+      },
+    },
     name: { type: "string" },
     participants: {
       type: "array",
@@ -22,40 +32,16 @@ const bodyJsonSchema = {
         required: ["name", "team"],
       },
     },
-    lineups: {
-      type: "array",
-      items: {
-        type: "array",
-        maxItems: 2,
-        minItems: 2,
-        items: {
-          type: "number",
-        },
-      },
-    },
   },
   required: ["name", "participants"],
 } as const;
 
 const responseJsonSchema = {
-  200: {
+  201: {
     type: "object",
     properties: {
       _id: { type: "number" },
-      name: { type: "string" },
-      participants: {
-        type: "array",
-        items: {
-          type: "object",
-          properties: {
-            _id: { type: "number" },
-            name: { type: "string" },
-            team: { type: "string" },
-            country: { type: "string" },
-          },
-        },
-        required: ["_id", "name", "team"],
-      },
+      created: { type: "string", format: "date-time" },
       matches: {
         type: "array",
         items: {
@@ -64,25 +50,46 @@ const responseJsonSchema = {
             type: "object",
             properties: {
               _id: { type: "number" },
-              tournament_id: { type: "number" },
+              created: { type: "string", format: "date-time" },
+              match_number: { type: "number" },
               participant_1_id: { type: "number", nullable: true },
               participant_2_id: { type: "number", nullable: true },
-              match_number: { type: "number" },
               stage_number: { type: "number" },
+              tournament_id: { type: "number" },
+              updated: { type: "string", format: "date-time" },
             },
             required: [
               "_id",
-              "tournament_id",
+              "created",
+              "match_number",
               "participant_1_id",
               "participant_2_id",
-              "match_number",
               "stage_number",
+              "tournament_id",
+              "updated",
             ],
           },
         },
       },
+      name: { type: "string" },
+      participants: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            _id: { type: "number" },
+            country: { type: "string" },
+            created: { type: "string", format: "date-time" },
+            name: { type: "string" },
+            team: { type: "string" },
+            updated: { type: "string", format: "date-time" },
+          },
+        },
+        required: ["_id", "created", "name", "team", "updated"],
+      },
+      updated: { type: "string", format: "date-time" },
     },
-    required: ["_id", "name"],
+    required: ["_id", "created", "name", "updated"],
   },
   400: {
     type: "string",
@@ -123,8 +130,6 @@ export default async function knockoutCreate(
         }
       }
 
-      console.log("AYYOOO", name, participants, lineups);
-
       fastify.pg.connect(
         async (err: Error, client: PoolClient, release: any) => {
           if (err) {
@@ -134,60 +139,55 @@ export default async function knockoutCreate(
 
           try {
             await verifyPermission(1, _id, client);
-            const result = await client.query(
+            const newKnockoutResult = await client.query(
               `
-                WITH new_tournament AS (
-                  INSERT INTO
-                    knockout_tournament.tournaments (name, created, updated)
-                  VALUES (
-                    '${name}'::VARCHAR,
-                    '${formatISO9075(Date.now())}'::TIMESTAMPTZ,
-                    '${formatISO9075(Date.now())}'::TIMESTAMPTZ
-                  )
-                  RETURNING
-                    id AS _id,
-                    name,
-                    created,
-                    updated
-                ),
-                new_participants AS (
-                  INSERT INTO
-                    knockout_tournament.participants (tournament_id, name, team, country_id)
-                  VALUES ${participants.map(
-                    (p) =>
-                      `((SELECT _id FROM new_tournament),
-                      '${p.name}'::VARCHAR,
-                      '${p.team}'::VARCHAR,
-                      ${p.country ? `'${p.country}'::VARCHAR` : "NULL"})`
-                  )}
-                  RETURNING
-                    id AS _id,
-                    name,
-                    team,
-                    country_id
-                ),
-                new_tournaments_users AS (
-                  INSERT INTO
-                    knockout_tournament.tournaments_users (tournament_id, user_id)
-                  VALUES
-                    ((SELECT _id FROM new_tournament), '${_id}'::BIGINT)
-                  RETURNING
-                    tournament_id,
-                    user_id
+                INSERT INTO
+                  knockout_tournament.tournaments (name)
+                VALUES (
+                  $1::VARCHAR
                 )
-                SELECT
-                    t._id AS _id,
-                    t.name AS name,
-                    jsonb_agg(p) AS participants
-                FROM
-                  new_tournament as t,
-                  new_participants as p
-                GROUP BY
-                  t._id,
-                  t.name
-              `
+                RETURNING
+                  id AS _id,
+                  *
+              `,
+              [name]
             );
-            const tournament = result.rows[0];
+
+            const tournament = newKnockoutResult.rows[0];
+
+            const newKnockoutParticipantsResult = await client.query(
+              `
+                INSERT INTO
+                  knockout_tournament.participants (tournament_id, name, team, country_id)
+                VALUES ${participants.map(
+                  (p) =>
+                    `($1::BIGINT,
+                    '${p.name}'::VARCHAR,
+                    '${p.team}'::VARCHAR,
+                    ${p.country ? `'${p.country}'::VARCHAR` : "NULL"})`
+                )}
+                RETURNING
+                  id AS _id,
+                  *
+              `,
+              [tournament._id]
+            );
+
+            tournament.participants = newKnockoutParticipantsResult.rows;
+
+            const newKnockoutUserResult = await client.query(
+              `
+              INSERT INTO
+                knockout_tournament.tournaments_users (tournament_id, user_id)
+              VALUES
+                ($1::BIGINT, $2::BIGINT)
+              RETURNING
+                tournament_id,
+                user_id
+              `,
+              [tournament._id, _id]
+            );
+
             const matches = await createKnockoutMatches(
               tournament,
               client,
