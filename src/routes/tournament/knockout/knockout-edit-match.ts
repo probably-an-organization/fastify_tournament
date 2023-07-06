@@ -3,18 +3,19 @@ import { FastifyInstance } from "fastify/types/instance";
 import type { PoolClient } from "pg";
 import { verifyTournamentUserPermission } from "../../../utils/fastify/pgTournamentUserPermissionUtils";
 import { isEven } from "../../../utils/mathUtils";
+import { isEqual, parse, parseISO, parseJSON } from "date-fns";
 
 const bodyJsonSchema = {
   type: "object",
   additionalProperties: false,
   properties: {
-    created: { type: "string" },
-    date: { type: "string" },
+    created: { type: "string" /*, format: "date-time" */ },
+    date: { type: "string" /*, format: "date-time" */ },
     information: { type: "string" },
     participant_1_id: { type: "number" },
     participant_2_id: { type: "number" },
     status: { type: "string", enum: ["future", "past", "live"] },
-    updated: { type: "string" },
+    updated: { type: "string" /*, format: "date-time" */ },
     winner: { type: "number", enum: [0, 1, 2] },
   },
   required: ["created", "updated"],
@@ -36,8 +37,8 @@ const responseJsonSchema = {
       type: "object",
       properties: {
         _id: { type: "number" },
-        created: { type: "string" },
-        date: { type: "string" },
+        created: { type: "string" /*, format: "date-time" */ },
+        date: { type: "string" /*, format: "date-time" */ },
         information: { type: "string" },
         match_number: { type: "number" },
         participant_1_id: { type: "number" },
@@ -45,7 +46,7 @@ const responseJsonSchema = {
         stage_number: { type: "number" },
         status: { type: "string", enum: ["future", "past", "live"] },
         tournament_id: { type: "number" },
-        updated: { type: "string" },
+        updated: { type: "string" /*, format: "date-time" */ },
         winner: { type: "number", enum: [0, 1, 2] },
       },
       required: [
@@ -113,6 +114,7 @@ export default async function knockoutEditMatch(
             const matchResult = await client.query(
               `
                 SELECT
+                  id as _id,
                   *
                 FROM
                   knockout_tournament.matches AS m
@@ -138,6 +140,10 @@ export default async function knockoutEditMatch(
               _id,
               client
             );
+
+            if (!isEqual(currentMatch.updated, parseJSON(updated))) {
+              throw Error("Updated date does not match");
+            }
 
             const updates = [];
             if (date) {
@@ -169,15 +175,11 @@ export default async function knockoutEditMatch(
                 ${updates.join(",")}
               WHERE
                 id = $1::BIGINT
-              AND
-                created = $2::TIMESTAMPTZ
-              AND
-                updated = $3::TIMESTAMPTZ
               RETURNING
                 id as _id,
                 *
             `,
-              [id, created, updated]
+              [id]
             );
 
             const returnPayload = [updateMatchResult.rows[0]];

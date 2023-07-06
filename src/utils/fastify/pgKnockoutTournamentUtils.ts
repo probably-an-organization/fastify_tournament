@@ -2,27 +2,30 @@ import type { PoolClient } from "pg";
 
 /**
  * Function to create the knockout matches according to the provided tournament data
- * @param tournament
+ * @param data
  * @param client
- * @param lineups
  */
 export const createKnockoutMatches = async (
-  tournament: {
-    _id: number;
-    created: string;
-    name: string;
-    participants: {
+  data: {
+    tournament: {
       _id: number;
       created: string;
       name: string;
-      team: string;
+      participants: {
+        _id: number;
+        created: string;
+        name: string;
+        team: string;
+        updated: string;
+      }[];
       updated: string;
-    }[];
-    updated: string;
+    };
+    lineups?: [number, number][];
   },
-  client: PoolClient,
-  lineups?: [number, number][]
+  client: PoolClient
 ): Promise<object | undefined> => {
+  const { tournament, lineups } = data;
+
   const getRowValue = (
     p1Id: number | null,
     p2Id: number | null,

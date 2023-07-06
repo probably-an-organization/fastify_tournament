@@ -41,7 +41,7 @@ const responseJsonSchema = {
     type: "object",
     properties: {
       _id: { type: "number" },
-      created: { type: "string", format: "date-time" },
+      created: { type: "string" /*, format: "date-time" */ },
       matches: {
         type: "array",
         items: {
@@ -50,13 +50,13 @@ const responseJsonSchema = {
             type: "object",
             properties: {
               _id: { type: "number" },
-              created: { type: "string", format: "date-time" },
+              created: { type: "string" /*, format: "date-time" */ },
               match_number: { type: "number" },
               participant_1_id: { type: "number", nullable: true },
               participant_2_id: { type: "number", nullable: true },
               stage_number: { type: "number" },
               tournament_id: { type: "number" },
-              updated: { type: "string", format: "date-time" },
+              updated: { type: "string" /*, format: "date-time" */ },
             },
             required: [
               "_id",
@@ -79,15 +79,15 @@ const responseJsonSchema = {
           properties: {
             _id: { type: "number" },
             country: { type: "string" },
-            created: { type: "string", format: "date-time" },
+            created: { type: "string" /*, format: "date-time" */ },
             name: { type: "string" },
             team: { type: "string" },
-            updated: { type: "string", format: "date-time" },
+            updated: { type: "string" /*, format: "date-time" */ },
           },
         },
         required: ["_id", "created", "name", "team", "updated"],
       },
-      updated: { type: "string", format: "date-time" },
+      updated: { type: "string" /*, format: "date-time" */ },
     },
     required: ["_id", "created", "name", "updated"],
   },
@@ -189,9 +189,11 @@ export default async function knockoutCreate(
             );
 
             const matches = await createKnockoutMatches(
-              tournament,
-              client,
-              lineups as [number, number][]
+              {
+                tournament,
+                lineups: lineups as [number, number][],
+              },
+              client
             );
 
             release();

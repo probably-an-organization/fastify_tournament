@@ -22,7 +22,7 @@ const responseJsonSchema = {
         type: "object",
         properties: {
           _id: { type: "number" },
-          created: { type: "string" },
+          created: { type: "string" /*, format: "date-time" */ },
           name: { type: "string" },
           matches: {
             type: "array",
@@ -30,15 +30,15 @@ const responseJsonSchema = {
               type: "object",
               properties: {
                 _id: { type: "number" },
-                created: { type: "string" },
-                date: { type: "string" },
+                created: { type: "string" /*, format: "date-time" */ },
+                date: { type: "string" /*, format: "date-time" */ },
                 information: { type: "string" },
                 match_number: { type: "number" },
                 participant_1_id: { type: "number" },
                 participant_2_id: { type: "number" },
                 stage_number: { type: "number" },
                 status: { type: "string" },
-                updated: { type: "string" },
+                updated: { type: "string" /*, format: "date-time" */ },
                 winner: { type: "number" },
               },
               required: [
@@ -63,10 +63,10 @@ const responseJsonSchema = {
               properties: {
                 _id: { type: "number" },
                 country_id: { type: "string" },
-                created: { type: "string" },
+                created: { type: "string" /*, format: "date-time" */ },
                 name: { type: "string" },
                 team: { type: "string" },
-                updated: { type: "string" },
+                updated: { type: "string" /*, format: "date-time" */ },
               },
               required: [
                 "_id",
@@ -79,7 +79,7 @@ const responseJsonSchema = {
             },
           },
           public: { type: "boolean" },
-          updated: { type: "string" },
+          updated: { type: "string" /*, format: "date-time" */ },
         },
         required: [
           "_id",
@@ -158,6 +158,9 @@ export default async function knockoutTournament(
                   knockout_tournament.matches
                 WHERE
                   tournament_id = $1::BIGINT
+                ORDER BY
+                  stage_number ASC,
+                  match_number ASC
               `,
               [tournament._id]
             );
