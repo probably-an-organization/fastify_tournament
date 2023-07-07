@@ -78,7 +78,7 @@ const responseJsonSchema = {
               ],
             },
           },
-          public: { type: "boolean" },
+          public_access: { type: "boolean" },
           updated: { type: "string" /*, format: "date-time" */ },
         },
         required: [
@@ -86,7 +86,7 @@ const responseJsonSchema = {
           "created",
           "matches",
           "name",
-          "public",
+          "public_access",
           "participants",
           "updated",
         ],
@@ -214,7 +214,7 @@ export default async function knockoutTournament(
             }
           } catch (err) {
             release();
-            if (tournament.public) {
+            if (tournament.public_access) {
               return reply.code(200).send({ editPermission, tournament });
             } else {
               return reply.code(401).send("No permission");

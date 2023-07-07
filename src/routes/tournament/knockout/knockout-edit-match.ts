@@ -3,7 +3,7 @@ import { FastifyInstance } from "fastify/types/instance";
 import type { PoolClient } from "pg";
 import { verifyTournamentUserPermission } from "../../../utils/fastify/pgTournamentUserPermissionUtils";
 import { isEven } from "../../../utils/mathUtils";
-import { isEqual, parse, parseISO, parseJSON } from "date-fns";
+import { isEqual, parseJSON } from "date-fns";
 
 const bodyJsonSchema = {
   type: "object",
@@ -149,7 +149,7 @@ export default async function knockoutEditMatch(
             if (date) {
               updates.push(`date = '${date}'::TIMESTAMPTZ`);
             }
-            if (information) {
+            if (information !== undefined) {
               updates.push(`information = '${information}'::VARCHAR`);
             }
             if (participant_1_id) {
