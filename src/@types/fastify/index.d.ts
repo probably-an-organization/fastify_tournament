@@ -8,5 +8,6 @@ declare module "fastify" {
   > {
     authenticate;
     decodeUserToken;
+    io;
   }
 }

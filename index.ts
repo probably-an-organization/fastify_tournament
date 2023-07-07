@@ -85,6 +85,53 @@ fastify.register(fastifyCors, {
 });
 
 /* * * * * * * * * * * * * * * * * * * *
+ * CUSTOM PLUGIN (socket.io)
+ * * * * * * * * * * * * * * * * * * * */
+
+import { Server, Socket } from "socket.io";
+
+const socketIO = new Server(fastify.server, {
+  cors: {
+    origin: APP_ORIGIN,
+    methods: ["GET", "POST"],
+    allowedHeaders: [],
+    // credentials: true
+  },
+});
+
+fastify.decorate("io", socketIO);
+
+fastify.addHook("onClose", (fastify, done) => {
+  fastify.io.close();
+  done();
+});
+
+fastify.ready(() => {
+  fastify.io.on("connect", (socket: Socket) => {
+    console.info("[Socket ID:", socket.id, "] Client connected!");
+    console.info("Total clients:", fastify.io.engine.clientsCount);
+
+    socket.on("disconnect", () => {
+      console.info("[Socket ID:", socket.id, "] Client disconnected!");
+      console.info("Total clients:", fastify.io.engine.clientsCount);
+    });
+
+    socket.on("createdMessage", (msg) => {
+      socket.broadcast.emit("newIncomingMessage", msg);
+    });
+  });
+});
+
+// test
+fastify.get("/socket", (request, reply) => {
+  fastify.io.emit("newIncomingMessage", {
+    author: "SERVER",
+    message: "HELLO",
+  });
+  return reply.code(200).send("Test message successfully emitted");
+});
+
+/* * * * * * * * * * * * * * * * * * * *
  * CUSTOM ROUTING
  * https://github.com/fastify/fastify-example-twitter/tree/master/tweet
  * * * * * * * * * * * * * * * * * * * */
