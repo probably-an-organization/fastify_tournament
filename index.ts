@@ -93,7 +93,7 @@ import { Server, Socket } from "socket.io";
 const socketIO = new Server(fastify.server, {
   cors: {
     origin: APP_ORIGIN,
-    methods: ["GET", "POST"],
+    methods: "GET,POST",
     allowedHeaders: [],
     // credentials: true
   },
@@ -107,28 +107,53 @@ fastify.addHook("onClose", (fastify, done) => {
 });
 
 fastify.ready(() => {
-  fastify.io.on("connect", (socket: Socket) => {
-    console.info("[Socket ID:", socket.id, "] Client connected!");
-    console.info("Total clients:", fastify.io.engine.clientsCount);
+  // chat
+  fastify.io.of("/chat").on("connect", (socket: Socket) => {
+    console.info(`[${socket.nsp.name}] Socket ${socket.id} connected!`);
+    console.info(
+      `[${socket.nsp.name}] Chat clients: ${socket.nsp.sockets.size}`
+    );
+    console.info(`Total clients: ${fastify.io.engine.clientsCount}`);
+    console.info("==========");
 
     socket.on("disconnect", () => {
-      console.info("[Socket ID:", socket.id, "] Client disconnected!");
-      console.info("Total clients:", fastify.io.engine.clientsCount);
+      console.info(`[${socket.nsp.name}] Socket ${socket.id} disconnected!`);
+      console.info(
+        `[${socket.nsp.name}] Chat clients: ${socket.nsp.sockets.size}`
+      );
+      console.info(`Total clients: ${fastify.io.engine.clientsCount}`);
+      console.info("==========");
     });
 
     socket.on("createdMessage", (msg) => {
       socket.broadcast.emit("newIncomingMessage", msg);
     });
   });
-});
 
-// test
-fastify.get("/socket", (request, reply) => {
-  fastify.io.emit("newIncomingMessage", {
-    author: "SERVER",
-    message: "HELLO",
-  });
-  return reply.code(200).send("Test message successfully emitted");
+  // tournament
+  fastify.io
+    .of(/^\/knockout-tournament-\d+$/)
+    .on("connect", (socket: Socket) => {
+      console.info(`[${socket.nsp.name}] Socket ${socket.id} connected!`);
+      console.info(
+        `[${socket.nsp.name}] KO clients: ${socket.nsp.sockets.size}`
+      );
+      console.info(`Total clients: ${fastify.io.engine.clientsCount}`);
+      console.info("==========");
+
+      socket.on("disconnect", () => {
+        console.info(`[${socket.nsp.name}] Socket ${socket.id} disconnected!`);
+        console.info(
+          `[${socket.nsp.name}] KO clients: ${socket.nsp.sockets.size}`
+        );
+        console.info(`Total clients: ${fastify.io.engine.clientsCount}`);
+        console.info("==========");
+      });
+
+      socket.on("message", (msg) => {
+        console.info(`[${socket.nsp.name}] ${socket.id}: ${msg}`);
+      });
+    });
 });
 
 /* * * * * * * * * * * * * * * * * * * *
