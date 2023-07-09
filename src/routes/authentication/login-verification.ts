@@ -1,6 +1,5 @@
 import { FastifyInstance } from "fastify/types/instance";
 import { JsonSchemaToTsProvider } from "@fastify/type-provider-json-schema-to-ts";
-import { APP_ORIGIN } from "../../configs/setupConfig";
 
 const responseJsonSchema = {
   200: {
@@ -36,7 +35,6 @@ export default async function loginVerification(
           const { _id } = await fastify.decodeUserToken(request);
           return reply.code(200).send();
         } catch (err) {
-          // return reply.code(401).redirect(APP_ORIGIN + "/tournament") // NOT WORKING
           return reply.code(401).send();
         }
       }

@@ -10,16 +10,23 @@ import fastifyJwt from "@fastify/jwt";
 import fastifyCookie from "@fastify/cookie";
 import fastifyCors from "@fastify/cors";
 
-import { JWT_SECRET, APP_ORIGIN } from "./src/configs/setupConfig";
+import { APP_ORIGIN } from "./src/configs/setupConfig";
 import {
   FASTIFY_CONFIG,
-  FASTIFY_PG_CONNECTION_STRING,
+  FASTIFY_COOKIE_CONFIG,
+  FASTIFY_CORS_CONFIG,
+  FASTIFY_JWT_CONFIG,
+  FASTIFY_PG_CONFIG,
 } from "./src/configs/fastifyConfig";
 
 /* * * * * * * * * * * * * * * * * * * *
  * FASTIFY SETUP
  * * * * * * * * * * * * * * * * * * * */
 const fastify = fastifyCore(FASTIFY_CONFIG);
+fastify.register(fastifyPostgres, FASTIFY_PG_CONFIG);
+fastify.register(fastifyCookie, FASTIFY_COOKIE_CONFIG);
+fastify.register(fastifyJwt, FASTIFY_JWT_CONFIG);
+fastify.register(fastifyCors, FASTIFY_CORS_CONFIG);
 
 fastify.addContentTypeParser(
   "application/json",
@@ -35,23 +42,6 @@ fastify.addContentTypeParser(
     }
   }
 );
-
-fastify.register(fastifyPostgres, {
-  connectionString: FASTIFY_PG_CONNECTION_STRING,
-});
-
-fastify.register(fastifyCookie);
-
-fastify.register(fastifyJwt, {
-  secret: JWT_SECRET,
-  cookie: {
-    cookieName: "token",
-    signed: false,
-  },
-  // sign: {
-  //   expiresIn: "30min",
-  // },
-});
 
 // used for onRequest (making a valid jwt a requirement for the request)
 fastify.decorate("authenticate", async (request: any, reply: any) => {
@@ -71,19 +61,6 @@ fastify.decorate("decodeUserToken", async (request: any) => {
   }
 });
 
-fastify.register(fastifyCors, {
-  credentials: true,
-  optionsSuccessStatus: 200,
-  methods: "GET,PUT,POST,DELETE,OPTIONS",
-  origin: (origin, callback) => {
-    if (origin === APP_ORIGIN) {
-      callback(null, true);
-    } else {
-      callback(new Error("[CORS]: not allowed"), false);
-    }
-  },
-});
-
 /* * * * * * * * * * * * * * * * * * * *
  * CUSTOM PLUGIN (socket.io)
  * * * * * * * * * * * * * * * * * * * */
@@ -92,7 +69,7 @@ import { Server, Socket } from "socket.io";
 
 const socketIO = new Server(fastify.server, {
   cors: {
-    origin: APP_ORIGIN,
+    origin: [APP_ORIGIN],
     methods: "GET,POST",
     allowedHeaders: [],
     // credentials: true
@@ -183,7 +160,7 @@ async function initialize() {
 initialize().then((success) => {
   if (success) {
     console.log("[/src/index.ts] successfully initialized");
-    fastify.listen({ port: 8080 }, (err, address) => {
+    fastify.listen({ host: "0.0.0.0", port: 8080 }, (err, address) => {
       if (err) {
         console.error("[/src/index.ts]:", err);
         process.exit(1);

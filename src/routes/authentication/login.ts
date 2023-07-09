@@ -96,9 +96,9 @@ export default async function login(
                 .header("Access-Control-Allow-Origin", APP_ORIGIN)
                 .header("Content-Type", "application/json; charset='uft8'")
                 .setCookie("token", token, {
-                  //domain: "https://wherethemtools.at",
+                  domain: "192.168.1.152",
                   path: "/",
-                  secure: true,
+                  secure: false, // TODO set to TRUE asap (https required)
                   httpOnly: true,
                   sameSite: "lax",
                 })
