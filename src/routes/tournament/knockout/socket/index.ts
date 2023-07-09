@@ -1,5 +1,6 @@
 import { FastifyInstance } from "fastify";
 import knockoutSocketTest from "./test";
+import knockoutSocketBroadcastMatch from "./broadcast-match";
 
 /**
  * Encapsulates the routes
@@ -11,4 +12,5 @@ export default async function knockoutSocketRoutes(
   options: object
 ): Promise<void> {
   fastify.register(knockoutSocketTest);
+  fastify.register(knockoutSocketBroadcastMatch);
 }
