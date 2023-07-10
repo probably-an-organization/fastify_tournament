@@ -131,10 +131,11 @@ fastify.ready(() => {
 
       // limit
       if (socket.nsp.sockets.size > TEXT_MAX_SOCKET_SIZE) {
-        console.info(`[${socket.nsp.name}] Max socket limit passed!`);
+        console.info(`[${socket.nsp.name}] Max socket limit reached!`);
         console.info(
           `[${socket.nsp.name}] Disconnecting socket ${socket.id}...`
         );
+        socket.emit("error", "Max socket limit reached!");
         socket.disconnect();
       }
 
