@@ -1,7 +1,7 @@
 import { FastifyInstance } from "fastify/types/instance";
 import { hashCompare } from "../../utils/hashUtils";
 import { JsonSchemaToTsProvider } from "@fastify/type-provider-json-schema-to-ts";
-import { APP_ORIGIN } from "../../configs/setupConfig";
+import { APP_DOMAIN, APP_ORIGIN } from "../../configs/setupConfig";
 import type { PoolClient } from "pg";
 
 const bodyJsonSchema = {
@@ -96,7 +96,7 @@ export default async function login(
                 .header("Access-Control-Allow-Origin", APP_ORIGIN)
                 .header("Content-Type", "application/json; charset='uft8'")
                 .setCookie("token", token, {
-                  domain: "192.168.1.152",
+                  domain: APP_DOMAIN,
                   path: "/",
                   secure: false, // TODO set to TRUE asap (https required)
                   httpOnly: true,
