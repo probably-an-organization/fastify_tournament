@@ -70,10 +70,17 @@ export default async function knockoutSocketBroadcastMatch(
           }
         );
 
-        fastify.io.of(`/knockout-tournament-${id}`).emit("broadcast", {
-          stageNumber,
-          matchNumber,
-        });
+        console.info("==========");
+        console.info(
+          `[/knockout-tournament-${id}] Setting broadcast match to ${stageNumber} (stage), ${matchNumber} (match)`
+        );
+        fastify.io
+          .of(`/knockout-tournament-${id}`)
+          .to("match-room")
+          .emit("broadcast-match", {
+            stageNumber,
+            matchNumber,
+          });
         reply.code(200).send("Broadcast message successfully emitted");
       }
     );

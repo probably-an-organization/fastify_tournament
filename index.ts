@@ -9,6 +9,7 @@ import fastifyPostgres from "@fastify/postgres";
 import fastifyJwt from "@fastify/jwt";
 import fastifyCookie from "@fastify/cookie";
 import fastifyCors from "@fastify/cors";
+import fastifyRateLimit from "@fastify/rate-limit";
 
 import { APP_ORIGIN } from "./src/configs/setupConfig";
 import {
@@ -17,6 +18,7 @@ import {
   FASTIFY_CORS_CONFIG,
   FASTIFY_JWT_CONFIG,
   FASTIFY_PG_CONFIG,
+  FASTIFY_RATE_LIMIT_CONFIG,
 } from "./src/configs/fastifyConfig";
 
 /* * * * * * * * * * * * * * * * * * * *
@@ -27,6 +29,7 @@ fastify.register(fastifyPostgres, FASTIFY_PG_CONFIG);
 fastify.register(fastifyCookie, FASTIFY_COOKIE_CONFIG);
 fastify.register(fastifyJwt, FASTIFY_JWT_CONFIG);
 fastify.register(fastifyCors, FASTIFY_CORS_CONFIG);
+fastify.register(fastifyRateLimit, FASTIFY_RATE_LIMIT_CONFIG);
 
 fastify.addContentTypeParser(
   "application/json",
@@ -76,6 +79,13 @@ const socketIO = new Server(fastify.server, {
   },
 });
 
+// middleware (e.g "Sending credentials": https://socket.io/docs/v4/middlewares/)
+socketIO.use((socket, next) => {
+  const token = socket.handshake.auth.token;
+  console.info("socket middleware, token: ", token);
+  next();
+});
+
 fastify.decorate("io", socketIO);
 
 fastify.addHook("onClose", (fastify, done) => {
@@ -107,27 +117,46 @@ fastify.ready(() => {
     });
   });
 
-  // tournament
+  // tournament TODO set broadcast flag in pg (tournaments)?
+  const TEXT_MAX_SOCKET_SIZE = 3;
   fastify.io
     .of(/^\/knockout-tournament-\d+$/)
     .on("connect", (socket: Socket) => {
+      console.info("==========");
       console.info(`[${socket.nsp.name}] Socket ${socket.id} connected!`);
       console.info(
         `[${socket.nsp.name}] KO clients: ${socket.nsp.sockets.size}`
       );
       console.info(`Total clients: ${fastify.io.engine.clientsCount}`);
-      console.info("==========");
+
+      // limit
+      if (socket.nsp.sockets.size > TEXT_MAX_SOCKET_SIZE) {
+        console.info(`[${socket.nsp.name}] Max socket limit passed!`);
+        console.info(
+          `[${socket.nsp.name}] Disconnecting socket ${socket.id}...`
+        );
+        socket.disconnect();
+      }
 
       socket.on("disconnect", () => {
+        console.info("==========");
         console.info(`[${socket.nsp.name}] Socket ${socket.id} disconnected!`);
         console.info(
           `[${socket.nsp.name}] KO clients: ${socket.nsp.sockets.size}`
         );
         console.info(`Total clients: ${fastify.io.engine.clientsCount}`);
+      });
+
+      socket.on("join", (room) => {
         console.info("==========");
+        console.info(
+          `[${socket.nsp.name}] Socket ${socket.id} joining room ${room}`
+        );
+        socket.join(room);
       });
 
       socket.on("message", (msg) => {
+        console.info("==========");
         console.info(`[${socket.nsp.name}] ${socket.id}: ${msg}`);
       });
     });
