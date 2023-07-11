@@ -131,7 +131,7 @@ export default async function knockoutEditMatch(
             );
 
             if (matchResult.rows.length !== 1) {
-              throw Error("No match found");
+              return reply.code(404).send("No match found");
             }
 
             let currentMatch = matchResult.rows[0];
@@ -142,7 +142,7 @@ export default async function knockoutEditMatch(
             );
 
             if (!isEqual(currentMatch.updated, parseJSON(updated))) {
-              throw Error("Updated date does not match");
+              return reply.code(409).send("Updated date does not match");
             }
 
             const updates = [];
@@ -177,7 +177,17 @@ export default async function knockoutEditMatch(
                 id = $1::BIGINT
               RETURNING
                 id as _id,
-                *
+                created,
+                date,
+                information,
+                match_number,
+                participant_1_id,
+                participant_2_id,
+                stage_number,
+                status,
+                tournament_id,
+                updated,
+                winner
             `,
               [id]
             );
@@ -230,7 +240,17 @@ export default async function knockoutEditMatch(
                     id = $2::BIGINT
                   RETURNING
                     id as _id,
-                    *
+                    created,
+                    date,
+                    information,
+                    match_number,
+                    participant_1_id,
+                    participant_2_id,
+                    stage_number,
+                    status,
+                    tournament_id,
+                    updated,
+                    winner
                 `,
                 [
                   currentMatchWinner === 0
@@ -252,6 +272,18 @@ export default async function knockoutEditMatch(
             if (updateMatchResult.rows.length < 1) {
               return reply.code(400).send("Error????");
             }
+
+            // socket
+            const socketClients = fastify.io.of(
+              `/knockout-tournament-${currentMatch.tournament_id}`
+            ).sockets.size;
+            if (socketClients) {
+              fastify.io
+                .of(`/knockout-tournament-${currentMatch.tournament_id}`)
+                .to("tree-room")
+                .emit("tree-update", returnPayload);
+            }
+
             return reply.code(200).send(returnPayload);
           } catch (err) {
             release();
