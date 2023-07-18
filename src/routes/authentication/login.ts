@@ -16,7 +16,13 @@ const bodyJsonSchema = {
 
 const responseJsonSchema = {
   200: {
-    type: "string",
+    type: "object",
+    additionalProperties: false,
+    properties: {
+      email: { type: "string" },
+      username: { type: "string" },
+      verified: { type: "boolean" },
+    },
   },
   400: {
     type: "string",
@@ -102,7 +108,11 @@ export default async function login(
                   httpOnly: true,
                   sameSite: "lax",
                 })
-                .send("Success");
+                .send({
+                  email: result.rows[0].email,
+                  username: result.rows[0].username,
+                  verified: result.rows[0].verified,
+                });
             }
           } catch (err) {
             release();

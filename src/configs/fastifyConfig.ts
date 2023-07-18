@@ -51,7 +51,7 @@ export const FASTIFY_RATE_LIMIT_CONFIG = {
   // global : false, // default true
   max: 5, // default 1000
   // ban: 2, // default null
-  timeWindow: 1000 * 10, // ms, default 1000 * 60
+  timeWindow: 1000 * 1, // ms, default 1000 * 60
   // hook: 'preHandler', // default 'onRequest'
   // cache: 10000, // default 5000
   // allowList: ['127.0.0.1'], // default []
