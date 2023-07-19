@@ -85,35 +85,37 @@ export default async function login(
               verified: boolean;
             } = result.rows[0];
 
-            if (await hashCompare(password, userData.password)) {
-              const token: string = await reply.jwtSign(
-                {
-                  _id: userData._id,
-                },
-                {
-                  expiresIn: "1h",
-                }
-              );
-
-              return reply
-                .code(200)
-                .header("Access-Control-Allow-Credentials", "true")
-                .header("Access-Control-Allow-Headers", "*")
-                .header("Access-Control-Allow-Origin", APP_ORIGIN)
-                .header("Content-Type", "application/json; charset='uft8'")
-                .setCookie("token", token, {
-                  domain: APP_DOMAIN,
-                  path: "/",
-                  secure: false, // TODO set to TRUE asap (https required)
-                  httpOnly: true,
-                  sameSite: "lax",
-                })
-                .send({
-                  email: result.rows[0].email,
-                  username: result.rows[0].username,
-                  verified: result.rows[0].verified,
-                });
+            if (!(await hashCompare(password, userData.password))) {
+              return reply.code(401).send("Wrong credentials");
             }
+
+            const token: string = await reply.jwtSign(
+              {
+                _id: userData._id,
+              },
+              {
+                expiresIn: "1h",
+              }
+            );
+
+            return reply
+              .code(200)
+              .header("Access-Control-Allow-Credentials", "true")
+              .header("Access-Control-Allow-Headers", "*")
+              .header("Access-Control-Allow-Origin", APP_ORIGIN)
+              .header("Content-Type", "application/json; charset='uft8'")
+              .setCookie("token", token, {
+                domain: APP_DOMAIN,
+                path: "/",
+                secure: false, // TODO set to TRUE asap (https required)
+                httpOnly: true,
+                sameSite: "lax",
+              })
+              .send({
+                email: result.rows[0].email,
+                username: result.rows[0].username,
+                verified: result.rows[0].verified,
+              });
           } catch (err) {
             release();
             return reply.code(400).send(err as string);

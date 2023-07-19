@@ -9,6 +9,7 @@ const responseJsonSchema = {
       type: "object",
       properties: {
         _id: { type: "number" },
+        description: { type: "string" },
         name: { type: "string" },
         participants: { type: "number" },
         created: { type: "string" /*, format: "date-time" */ },
@@ -55,8 +56,9 @@ export default async function myTournaments(
               `
               SELECT
                 t.id as _id,
-                t.name,
                 t.created,
+                t.description,
+                t.name,
                 t.updated,
                 COUNT(p.tournament_id) AS participants
               FROM

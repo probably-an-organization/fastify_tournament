@@ -9,6 +9,7 @@ const bodyJsonSchema = {
   type: "object",
   additionalProperties: false,
   properties: {
+    description: { type: "string" },
     lineups: {
       type: "array",
       items: {
@@ -42,6 +43,7 @@ const responseJsonSchema = {
     properties: {
       _id: { type: "number" },
       created: { type: "string" /*, format: "date-time" */ },
+      description: { type: "string" },
       matches: {
         type: "array",
         items: {
@@ -116,7 +118,7 @@ export default async function knockoutCreate(
   fastify
     .withTypeProvider<JsonSchemaToTsProvider>()
     .post("/knockout-create", routeOptions, (request, reply): void => {
-      const { lineups, name, participants } = request.body;
+      const { description, lineups, name, participants } = request.body;
       const { _id } = request.user;
 
       if (lineups) {
@@ -142,15 +144,15 @@ export default async function knockoutCreate(
             const newKnockoutResult = await client.query(
               `
                 INSERT INTO
-                  knockout_tournament.tournaments (name)
+                  knockout_tournament.tournaments (name, description)
                 VALUES (
-                  $1::VARCHAR
+                  $1::VARCHAR, $2::VARCHAR
                 )
                 RETURNING
                   id AS _id,
                   *
               `,
-              [name]
+              [name, description]
             );
 
             const tournament = newKnockoutResult.rows[0];
