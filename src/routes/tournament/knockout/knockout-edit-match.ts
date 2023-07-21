@@ -280,8 +280,7 @@ export default async function knockoutEditMatch(
             if (socketClients) {
               fastify.io
                 .of(`/knockout-tournament-${currentMatch.tournament_id}`)
-                .to("tree-room")
-                .emit("tree-update", returnPayload);
+                .emit("tournament-update", returnPayload);
             }
 
             return reply.code(200).send(returnPayload);

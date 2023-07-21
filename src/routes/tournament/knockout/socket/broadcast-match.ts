@@ -8,8 +8,8 @@ const paramsJsonSchema = {
   additionalProperties: false,
   properties: {
     id: { type: "string" },
-    matchNumber: { type: "number" },
-    stageNumber: { type: "number" },
+    matchIndex: { type: "number" },
+    stageIndex: { type: "number" },
   },
   required: ["id"],
 } as const;
@@ -19,8 +19,8 @@ const responseJsonSchema = {
     type: "object",
     additionalProperties: false,
     properties: {
-      matchNumber: { type: "number" },
-      stageNumber: { type: "number" },
+      matchIndex: { type: "number" },
+      stageIndex: { type: "number" },
     },
   },
   400: {
@@ -48,10 +48,10 @@ export default async function knockoutSocketBroadcastMatch(
   fastify
     .withTypeProvider<JsonSchemaToTsProvider>()
     .get(
-      "/knockout-tournament/:id/broadcast/:stageNumber/:matchNumber",
+      "/knockout-tournament/:id/broadcast/:stageIndex/:matchIndex",
       routeOptions,
       (request, reply): void => {
-        const { id, matchNumber, stageNumber } = request.params;
+        const { id, matchIndex, stageIndex } = request.params;
         const { _id } = request.user;
 
         fastify.pg.connect(
@@ -72,15 +72,12 @@ export default async function knockoutSocketBroadcastMatch(
 
         console.info("==========");
         console.info(
-          `[/knockout-tournament-${id}] Setting broadcast match to ${stageNumber} (stage), ${matchNumber} (match)`
+          `[/knockout-tournament-${id}] Setting broadcast match to ${stageIndex} (stage), ${matchIndex} (match)`
         );
-        fastify.io
-          .of(`/knockout-tournament-${id}`)
-          .to("match-room")
-          .emit("broadcast-match", {
-            stageNumber,
-            matchNumber,
-          });
+        fastify.io.of(`/knockout-tournament-${id}`).emit("broadcast-match", {
+          stageIndex,
+          matchIndex,
+        });
         reply.code(200).send("Broadcast message successfully emitted");
       }
     );

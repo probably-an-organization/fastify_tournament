@@ -75,7 +75,7 @@ export default async function login(
             release();
 
             if (result.rowCount !== 1) {
-              return reply.code(400).send("User not found");
+              return reply.code(401).send("User not found");
             }
 
             const userData: {
