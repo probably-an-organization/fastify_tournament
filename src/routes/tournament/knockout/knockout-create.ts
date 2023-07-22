@@ -33,6 +33,7 @@ const bodyJsonSchema = {
         required: ["name", "team"],
       },
     },
+    type: { type: "string" },
   },
   required: ["name", "participants"],
 } as const;
@@ -118,7 +119,7 @@ export default async function knockoutCreate(
   fastify
     .withTypeProvider<JsonSchemaToTsProvider>()
     .post("/knockout-create", routeOptions, (request, reply): void => {
-      const { description, lineups, name, participants } = request.body;
+      const { description, lineups, name, participants, type } = request.body;
       const { _id } = request.user;
 
       if (lineups) {
@@ -144,15 +145,15 @@ export default async function knockoutCreate(
             const newKnockoutResult = await client.query(
               `
                 INSERT INTO
-                  knockout_tournament.tournaments (name, description)
+                  tournament.tournaments (name, description, type)
                 VALUES (
-                  $1::VARCHAR, $2::VARCHAR
+                  $1::VARCHAR, $2::VARCHAR, $3::tournament.tournament_types
                 )
                 RETURNING
                   id AS _id,
                   *
               `,
-              [name, description]
+              [name, description, type]
             );
 
             const tournament = newKnockoutResult.rows[0];
@@ -160,7 +161,7 @@ export default async function knockoutCreate(
             const newKnockoutParticipantsResult = await client.query(
               `
                 INSERT INTO
-                  knockout_tournament.participants (tournament_id, name, team, country_id)
+                  knockout.participants (tournament_id, name, team, country_id)
                 VALUES ${participants.map(
                   (p) =>
                     `($1::BIGINT,
@@ -180,7 +181,7 @@ export default async function knockoutCreate(
             const newKnockoutUserResult = await client.query(
               `
               INSERT INTO
-                knockout_tournament.tournaments_users (tournament_id, user_id)
+                tournament.tournaments_users (tournament_id, user_id)
               VALUES
                 ($1::BIGINT, $2::BIGINT)
               RETURNING

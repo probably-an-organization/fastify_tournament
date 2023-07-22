@@ -85,7 +85,7 @@ export default async function login(
 
             try {
               const result = await client.query(
-                "SELECT tournament_id, name, participants FROM knockout_tournament.tournaments"
+                "SELECT tournament_id, name, participants FROM tournament.tournaments"
               );
               release();
               return reply

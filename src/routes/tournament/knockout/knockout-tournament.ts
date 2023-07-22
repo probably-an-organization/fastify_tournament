@@ -136,7 +136,7 @@ export default async function knockoutTournament(
                   id as _id,
                   *
                 FROM
-                  knockout_tournament.tournaments
+                  tournament.tournaments
                 WHERE
                   id = $1::BIGINT
               `,
@@ -155,7 +155,7 @@ export default async function knockoutTournament(
                   id as _id,
                   *
                 FROM
-                  knockout_tournament.matches
+                  knockout.matches
                 WHERE
                   tournament_id = $1::BIGINT
                 ORDER BY
@@ -179,7 +179,7 @@ export default async function knockoutTournament(
                   id as _id,
                   *
                 FROM
-                  knockout_tournament.participants
+                  knockout.participants
                 WHERE
                   tournament_id = $1::BIGINT
               `,

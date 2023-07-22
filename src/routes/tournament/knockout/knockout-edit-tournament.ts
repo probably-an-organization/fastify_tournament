@@ -153,9 +153,9 @@ export default async function knockoutEditTournament(
                   id as _id,
                   *
                 FROM
-                  knockout_tournament.tournaments AS t
+                  tournament.tournaments AS t
                 RIGHT JOIN
-                  knockout_tournament.tournaments_users AS tu
+                  tournament.tournaments_users AS tu
                 ON
                   t.id = tu.tournament_id
                 WHERE
@@ -188,7 +188,7 @@ export default async function knockoutEditTournament(
               const updateTournamentResult = await client.query(
                 `
               UPDATE
-                knockout_tournament.tournaments
+                tournament.tournaments
               SET
                 ${updates.join(",")}
               WHERE

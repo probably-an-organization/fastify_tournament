@@ -117,9 +117,9 @@ export default async function knockoutEditMatch(
                   id as _id,
                   *
                 FROM
-                  knockout_tournament.matches AS m
+                  knockout.matches AS m
                 RIGHT JOIN
-                  knockout_tournament.tournaments_users AS tu
+                  tournament.tournaments_users AS tu
                 ON
                   m.tournament_id = tu.tournament_id
                 WHERE
@@ -159,9 +159,7 @@ export default async function knockoutEditMatch(
               updates.push(`participant_2_id = '${participant_2_id}'::BIGINT`);
             }
             if (status) {
-              updates.push(
-                `status = '${status}'::knockout_tournament.match_status_types`
-              );
+              updates.push(`status = '${status}'::knockout.match_status_types`);
             }
             if (winner !== undefined) {
               updates.push(`winner = '${winner}'::CHAR`);
@@ -170,7 +168,7 @@ export default async function knockoutEditMatch(
             const updateMatchResult = await client.query(
               `
               UPDATE
-                knockout_tournament.matches
+                knockout.matches
               SET
                 ${updates.join(",")}
               WHERE
@@ -204,7 +202,7 @@ export default async function knockoutEditMatch(
                   m.id as _id,
                   *
                 FROM
-                  knockout_tournament.matches AS m
+                  knockout.matches AS m
                 WHERE
                   tournament_id = $1::BIGINT
                 AND
@@ -227,7 +225,7 @@ export default async function knockoutEditMatch(
               const updateNextMatchResult = await client.query(
                 `
                   UPDATE
-                    knockout_tournament.matches
+                    knockout.matches
                   SET
                     ${
                       isEven(Number(currentMatch.match_number))

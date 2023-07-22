@@ -17,7 +17,7 @@ export const verifyTournamentUserPermission = async (
     SELECT
       *
     FROM
-      knockout_tournament.tournaments_users
+      tournament.tournaments_users
     WHERE
       tournament_id = $1::BIGINT
     AND

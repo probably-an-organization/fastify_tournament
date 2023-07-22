@@ -47,13 +47,13 @@ export default async function tournaments(
                 t.name,
                 COUNT(p.tournament_id) AS participants
               FROM
-                knockout_tournament.tournaments AS t
+                tournament.tournaments AS t
               INNER JOIN
-                knockout_tournament.tournaments_users AS tu
+                tournament.tournaments_users AS tu
               ON
                 t.id = tu.tournament_id
               LEFT JOIN
-                knockout_tournament.participants AS p
+                knockout.participants AS p
               ON
                 t.id = p.tournament_id
               WHERE
@@ -67,9 +67,9 @@ export default async function tournaments(
               t.name,
               COUNT(p.tournament_id) AS participants
             FROM
-              knockout_tournament.tournaments AS t
+              tournament.tournaments AS t
             LEFT JOIN
-              knockout_tournament.participants AS p
+              knockout.participants AS p
             ON
               t.id = p.tournament_id
             GROUP BY

@@ -52,6 +52,8 @@ export default async function myTournaments(
           }
 
           try {
+            // TODO currently participants count is only retrieved from knockout tournaments
+            // once there are more tournament types, another way of retrieving participants is needed!
             const result = await client.query(
               `
               SELECT
@@ -60,15 +62,16 @@ export default async function myTournaments(
                 t.description,
                 t.name,
                 t.updated,
+                t.type,
                 COUNT(p.tournament_id) AS participants
               FROM
-                knockout_tournament.tournaments AS t
+                tournament.tournaments AS t
               INNER JOIN
-                knockout_tournament.tournaments_users AS tu
+                tournament.tournaments_users AS tu
               ON
                 t.id = tu.tournament_id
               LEFT JOIN
-                knockout_tournament.participants AS p
+                knockout.participants AS p
               ON
                 t.id = p.tournament_id
               WHERE

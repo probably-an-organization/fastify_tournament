@@ -47,7 +47,7 @@ export const createKnockoutMatches = async (
     const result = await client.query(
       `
         INSERT INTO
-          knockout_tournament.matches (
+          knockout.matches (
             tournament_id,
             participant_1_id,
             participant_2_id,
@@ -76,7 +76,7 @@ export const createKnockoutMatches = async (
     const result = await client.query(
       `
           INSERT INTO
-            knockout_tournament.matches (
+            knockout.matches (
               tournament_id,
               participant_1_id,
               participant_2_id,
