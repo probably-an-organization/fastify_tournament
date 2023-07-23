@@ -9,10 +9,11 @@ const responseJsonSchema = {
       type: "object",
       properties: {
         _id: { type: "number" },
+        created: { type: "string" /*, format: "date-time" */ },
         description: { type: "string" },
         name: { type: "string" },
         participants: { type: "number" },
-        created: { type: "string" /*, format: "date-time" */ },
+        type: { type: "string" },
         updated: { type: "string" /*, format: "date-time" */ },
       },
       required: ["_id", "name", "participants", "created", "updated"],
