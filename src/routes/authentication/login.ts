@@ -62,8 +62,9 @@ export default async function login(
               `
               SELECT
                 u.id AS _id,
-                u.username,
+                u.email,
                 u.password,
+                u.username,
                 u.verified
               FROM
                 authentication.users AS u
