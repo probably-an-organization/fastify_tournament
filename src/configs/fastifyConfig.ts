@@ -1,10 +1,10 @@
 import type { FastifyCookieOptions } from "@fastify/cookie";
-import type { FastifyContextConfig } from "fastify";
+import type { FastifyPluginOptions } from "fastify";
 
 import { EnvironmentType, getEnvironmentVariable } from "../utils/envUtils";
 import { APP_ORIGIN, JWT_SECRET } from "./setupConfig";
 
-export const FASTIFY_CONFIG: FastifyContextConfig = {
+export const FASTIFY_CONFIG: FastifyPluginOptions = {
   logger: getEnvironmentVariable("FASTIFY_LOGGER", EnvironmentType.Boolean),
 };
 
