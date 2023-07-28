@@ -3,6 +3,8 @@ import { hashCompare } from "../../utils/hashUtils";
 import { JsonSchemaToTsProvider } from "@fastify/type-provider-json-schema-to-ts";
 import { APP_DOMAIN, APP_ORIGIN } from "../../configs/setupConfig";
 import type { PoolClient } from "pg";
+import addDays from "date-fns/addDays";
+import getUnixTime from "date-fns/getUnixTime";
 
 const bodyJsonSchema = {
   type: "object",
@@ -95,7 +97,7 @@ export default async function login(
                 _id: userData._id,
               },
               {
-                expiresIn: "1h",
+                expiresIn: "30d",
               }
             );
 
@@ -107,10 +109,11 @@ export default async function login(
               .header("Content-Type", "application/json; charset='uft8'")
               .setCookie("token", token, {
                 domain: APP_DOMAIN,
-                path: "/",
-                secure: false, // TODO set to TRUE asap (https required)
                 httpOnly: true,
+                maxAge: getUnixTime(addDays(Date.now(), 30)),
+                path: "/",
                 sameSite: "lax",
+                secure: false, // TODO set to TRUE asap (https required)
               })
               .send({
                 email: result.rows[0].email,

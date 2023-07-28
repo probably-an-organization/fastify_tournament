@@ -62,7 +62,7 @@ export default async function loginVerification(
             release();
             return reply.code(200).send(result.rows[0]);
           } catch (err) {
-            reply.code(401).send();
+            return reply.code(401).send();
           }
         }
       );
