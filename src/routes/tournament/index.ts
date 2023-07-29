@@ -1,6 +1,6 @@
 import { FastifyInstance } from "fastify";
 
-import knockoutRoutes from "./knockout";
+import knockoutRoutes from "../knockout";
 import tournamentsUser from "./tournaments-user";
 import tournaments from "./tournaments";
 

@@ -4,7 +4,7 @@ import knockoutTournament from "./knockout-tournament";
 import knockoutCreate from "./knockout-create";
 import knockoutEditMatch from "./knockout-edit-match";
 import knockoutEditTournament from "./knockout-edit-tournament";
-import knockoutSocketRoutes from "./socket";
+import knockoutSocketRoutes from "../socket";
 
 /**
  * Encapsulates the routes

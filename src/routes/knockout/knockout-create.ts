@@ -1,9 +1,9 @@
 import { JsonSchemaToTsProvider } from "@fastify/type-provider-json-schema-to-ts";
 import { FastifyInstance } from "fastify/types/instance";
 import type { PoolClient } from "pg";
-import { createKnockoutMatches } from "../../../utils/fastify/pgKnockoutTournamentUtils";
-import { verifyPermission } from "../../../utils/fastify/pgPermissionUtils";
-import { hasUniqueNumbers } from "../../../utils/arrayUtils";
+import { createKnockoutMatches } from "../../utils/fastify-pg/pgKnockoutTournamentUtils";
+import { verifyPermission } from "../../utils/fastify-pg/pgPermissionUtils";
+import { hasUniqueNumbers } from "../../utils/arrayUtils";
 
 const bodyJsonSchema = {
   type: "object",

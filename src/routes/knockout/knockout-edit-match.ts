@@ -1,8 +1,8 @@
 import { JsonSchemaToTsProvider } from "@fastify/type-provider-json-schema-to-ts";
 import { FastifyInstance } from "fastify/types/instance";
 import type { PoolClient } from "pg";
-import { verifyTournamentUserPermission } from "../../../utils/fastify/pgTournamentUserPermissionUtils";
-import { isEven } from "../../../utils/mathUtils";
+import { verifyTournamentUserPermission } from "../../utils/fastify-pg/pgTournamentUserPermissionUtils";
+import { isEven } from "../../utils/mathUtils";
 import { isEqual, parseJSON } from "date-fns";
 
 const bodyJsonSchema = {
