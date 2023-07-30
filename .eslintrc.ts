@@ -3,7 +3,7 @@
  */
 
 /** @type {import("eslint").Linter.Config} */
-const config = {
+export default {
   root: true,
   parser: "@typescript-eslint/parser",
   plugins: ["@typescript-eslint"],
@@ -13,5 +13,3 @@ const config = {
     "plugin:@typescript-eslint/recommended",
   ],
 };
-
-module.exports = config;

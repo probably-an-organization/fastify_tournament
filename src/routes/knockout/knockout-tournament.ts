@@ -1,7 +1,8 @@
 import { JsonSchemaToTsProvider } from "@fastify/type-provider-json-schema-to-ts";
 import { FastifyInstance } from "fastify/types/instance";
 import type { PoolClient } from "pg";
-import { verifyTournamentUserPermission } from "../../utils/fastify-pg/pgTournamentUserPermissionUtils";
+
+import { verifyTournamentUserPermission } from "~src/utils/fastify-pg/pgTournamentUserPermissionUtils";
 
 const paramsJsonSchema = {
   type: "object",

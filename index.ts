@@ -1,5 +1,5 @@
-import * as dotenv from "dotenv";
-dotenv.config();
+import { config as dotenvConfig } from "dotenv";
+dotenvConfig();
 
 /* * * * * * * * * * * * * * * * * * * *
  * FASTIFY & DEFAULT PLUGINS
@@ -11,7 +11,7 @@ import fastifyCookie from "@fastify/cookie";
 import fastifyCors from "@fastify/cors";
 import fastifyRateLimit from "@fastify/rate-limit";
 
-import { APP_ORIGIN } from "./src/configs/setupConfig";
+import { APP_ORIGIN } from "~src/configs/setupConfig.js";
 import {
   FASTIFY_CONFIG,
   FASTIFY_COOKIE_CONFIG,
@@ -19,7 +19,7 @@ import {
   FASTIFY_JWT_CONFIG,
   FASTIFY_PG_CONFIG,
   FASTIFY_RATE_LIMIT_CONFIG,
-} from "./src/configs/fastifyConfig";
+} from "~src/configs/fastifyConfig.js";
 
 /* * * * * * * * * * * * * * * * * * * *
  * FASTIFY SETUP
@@ -167,14 +167,14 @@ fastify.ready(() => {
  * CUSTOM ROUTING
  * https://github.com/fastify/fastify-example-twitter/tree/master/tweet
  * * * * * * * * * * * * * * * * * * * */
-import routes from "./src/routes";
+import routes from "~src/routes";
 
 fastify.register(routes);
 
 /* * * * * * * * * * * * * * * * * * * *
  * CUSTOM INITIALIZATION
  * * * * * * * * * * * * * * * * * * * */
-import { verifyMail } from "./src/utils/mailUtils";
+import { verifyMail } from "~src/utils/mailUtils.js";
 
 async function initialize() {
   console.log("[/src/index.ts] initializing...");

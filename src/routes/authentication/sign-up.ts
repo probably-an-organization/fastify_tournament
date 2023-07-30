@@ -1,10 +1,11 @@
 import { FastifyInstance } from "fastify/types/instance";
-import { hashString } from "../../utils/hashUtils";
-import { generateToken } from "../../utils/tokenUtils";
-import { sendMail } from "../../utils/mailUtils";
-import { APP_ORIGIN } from "../../configs/setupConfig";
 import { JsonSchemaToTsProvider } from "@fastify/type-provider-json-schema-to-ts";
 import type { PoolClient } from "pg";
+
+import { hashString } from "~src/utils/hashUtils";
+import { generateToken } from "~src/utils/tokenUtils";
+import { sendMail } from "~src/utils/mailUtils";
+import { APP_ORIGIN } from "~src/configs/setupConfig";
 
 const bodyJsonSchema = {
   type: "object",

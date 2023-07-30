@@ -1,10 +1,11 @@
 import { FastifyInstance } from "fastify/types/instance";
-import { hashCompare } from "../../utils/hashUtils";
 import { JsonSchemaToTsProvider } from "@fastify/type-provider-json-schema-to-ts";
-import { APP_DOMAIN, APP_ORIGIN } from "../../configs/setupConfig";
 import type { PoolClient } from "pg";
 import addDays from "date-fns/addDays";
 import getUnixTime from "date-fns/getUnixTime";
+
+import { APP_DOMAIN, APP_ORIGIN } from "~src/configs/setupConfig";
+import { hashCompare } from "~src/utils/hashUtils";
 
 const bodyJsonSchema = {
   type: "object",
