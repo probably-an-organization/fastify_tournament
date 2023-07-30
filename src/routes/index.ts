@@ -1,6 +1,8 @@
 import { FastifyInstance } from "fastify";
 
 import authenticationRoutes from "./authentication";
+import knockoutRoutes from "./knockout";
+import premiumRoutes from "./premium";
 import tournamentRoutes from "./tournament";
 
 /**
@@ -13,5 +15,7 @@ export default async function routes(
   options: object
 ): Promise<void> {
   fastify.register(authenticationRoutes);
+  fastify.register(knockoutRoutes);
+  fastify.register(premiumRoutes);
   fastify.register(tournamentRoutes);
 }

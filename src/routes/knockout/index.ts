@@ -1,10 +1,10 @@
 import { FastifyInstance } from "fastify";
 
-import knockoutTournament from "./knockout-tournament";
 import knockoutCreate from "./knockout-create";
 import knockoutEditMatch from "./knockout-edit-match";
 import knockoutEditTournament from "./knockout-edit-tournament";
-import knockoutSocketRoutes from "../socket";
+import knockoutSocketBroadcastMatch from "./knockout-socket-broadcast-match";
+import knockoutTournament from "./knockout-tournament";
 
 /**
  * Encapsulates the routes
@@ -18,7 +18,6 @@ export default async function knockoutRoutes(
   fastify.register(knockoutCreate);
   fastify.register(knockoutEditMatch);
   fastify.register(knockoutEditTournament);
+  fastify.register(knockoutSocketBroadcastMatch);
   fastify.register(knockoutTournament);
-  // "/socket"
-  fastify.register(knockoutSocketRoutes);
 }
