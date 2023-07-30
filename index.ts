@@ -1,5 +1,4 @@
-import { config as dotenvConfig } from "dotenv";
-dotenvConfig();
+import "dotenv/config";
 
 /* * * * * * * * * * * * * * * * * * * *
  * FASTIFY & DEFAULT PLUGINS
