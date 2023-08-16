@@ -2,8 +2,6 @@ import { FastifyInstance } from "fastify/types/instance";
 
 import signUp from "./sign-up";
 import login from "./login";
-import users from "./users";
-import user from "./user";
 import logout from "./logout";
 import signUpVerification from "./sign-up-verification";
 import loginVerification from "./login-verification";
@@ -22,6 +20,4 @@ export default async function authenticationRoutes(
   fastify.register(login);
   fastify.register(loginVerification);
   fastify.register(logout);
-  fastify.register(users);
-  fastify.register(user);
 }
