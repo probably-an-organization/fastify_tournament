@@ -18,11 +18,11 @@ export const verifyPermission = async (
       FROM
         authentication.users AS u
       LEFT JOIN
-        authentication.users_roles AS ur
+        authentication.roles_users AS ur
       ON
         u.id = ur.user_id
       LEFT JOIN
-        authentication.roles_actions AS ra
+        authentication.actions_roles AS ra
       ON
         ur.role_id = ra.role_id
       WHERE
